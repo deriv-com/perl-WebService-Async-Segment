@@ -6,28 +6,21 @@ use 5.014000;
 
 use ExtUtils::MakeMaker 6.48;
 
-use File::ShareDir::Install;
-$File::ShareDir::Install::INCLUDE_DOTFILES = 1;
-$File::ShareDir::Install::INCLUDE_DOTDIRS = 1;
-install_share dist => "share";
-
-
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "Webservice to connect to Segment API",
+  "ABSTRACT" => "unofficial support for the Segment service",
   "AUTHOR" => "binary.com <BINARY\@cpan.org>",
   "CONFIGURE_REQUIRES" => {
-    "ExtUtils::MakeMaker" => "6.64",
-    "File::ShareDir::Install" => "0.06"
+    "ExtUtils::MakeMaker" => "6.64"
   },
   "DISTNAME" => "WebService-Async-Segment",
   "LICENSE" => "perl",
   "MIN_PERL_VERSION" => "5.014000",
   "NAME" => "WebService::Async::Segment",
   "PREREQ_PM" => {
-    "IO::Async::Loop" => 0,
     "JSON::MaybeUTF8" => 0,
     "Log::Any" => 0,
     "Log::Any::Adapter" => 0,
+    "Moo" => 0,
     "Net::Async::HTTP" => 0,
     "Path::Tiny" => 0,
     "Syntax::Keyword::Try" => 0,
@@ -35,16 +28,24 @@ my %WriteMakefileArgs = (
     "URI::Escape" => 0,
     "URI::QueryParam" => 0,
     "URI::Template" => 0,
-    "indirect" => 0,
-    "Moo" => 0
+    "indirect" => 0
   },
   "TEST_REQUIRES" => {
+    "Clone" => 0,
+    "Data::UUID" => 0,
+    "Date::Utility" => 0,
     "ExtUtils::MakeMaker" => 0,
     "File::Spec" => 0,
     "IO::Handle" => 0,
     "IPC::Open3" => 0,
+    "Mojolicious::Lite" => 0,
+    "Mojolicious::Plugin::RenderFile" => 0,
+    "Path::Tiny" => 0,
     "Test::CheckDeps" => "0.010",
-    "Test::More" => "0.94"
+    "Test::Exception" => 0,
+    "Test::More" => "0.98",
+    "Test::NoWarnings" => 0,
+    "URI" => 0
   },
   "VERSION" => "0.001",
   "test" => {
@@ -54,25 +55,31 @@ my %WriteMakefileArgs = (
 
 
 my %FallbackPrereqs = (
+  "Clone" => 0,
+  "Data::UUID" => 0,
+  "Date::Utility" => 0,
   "ExtUtils::MakeMaker" => 0,
   "File::Spec" => 0,
-  "IO::Async::Loop" => 0,
   "IO::Handle" => 0,
   "IPC::Open3" => 0,
   "JSON::MaybeUTF8" => 0,
   "Log::Any" => 0,
   "Log::Any::Adapter" => 0,
+  "Mojolicious::Lite" => 0,
+  "Mojolicious::Plugin::RenderFile" => 0,
+  "Moo" => 0,
   "Net::Async::HTTP" => 0,
   "Path::Tiny" => 0,
   "Syntax::Keyword::Try" => 0,
   "Test::CheckDeps" => "0.010",
-  "Test::More" => "0.94",
+  "Test::Exception" => 0,
+  "Test::More" => "0.98",
+  "Test::NoWarnings" => 0,
   "URI" => 0,
   "URI::Escape" => 0,
   "URI::QueryParam" => 0,
   "URI::Template" => 0,
-  "indirect" => 0,
-  "Moo" => 0
+  "indirect" => 0
 );
 
 
@@ -86,9 +93,3 @@ delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
   unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
 
 WriteMakefile(%WriteMakefileArgs);
-
-{
-package
-MY;
-use File::ShareDir::Install qw(postamble);
-}
