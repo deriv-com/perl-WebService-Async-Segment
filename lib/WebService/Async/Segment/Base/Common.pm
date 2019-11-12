@@ -19,7 +19,7 @@ This is generated based on the documentation in L<https://segment.com/docs/spec/
 =cut
 
 for qw( anonymous_id context integrations sent_at timestamp user_id ){
-    has $_ => {is => 'rw'};
+    has $_ => { is => 'ro' };
 }
 
 1;
