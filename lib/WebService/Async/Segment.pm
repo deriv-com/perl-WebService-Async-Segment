@@ -83,7 +83,7 @@ sub base_uri {
 
 sub send_request {
     my ($self, $method, %args) = @_;
-    
+
     $log->tracef('Segment method %s called with params %s', $method, %args);
 
     return $self->ua->POST(

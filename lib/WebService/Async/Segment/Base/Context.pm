@@ -42,7 +42,7 @@ This is collected automatically from Segment mobile libraries when possible.
 
 sub app : method { shift->{ app } }
 
-=head2 campaign	
+=head2 campaign
 
 Dictionary of information about the campaign that resulted in the API call, containing "name", "source", "medium", "term" and "content"
 This maps directly to the common UTM campaign parameters.
@@ -51,7 +51,7 @@ This maps directly to the common UTM campaign parameters.
 
 sub campaign : method { shift->{ campaign } }
 
-=head2 device	
+=head2 device
 
 Dictionary of information about the device, containing "id", "manufacturer", "model", "name", "type" and "version"
 
@@ -67,7 +67,7 @@ Current user's IP address
 
 sub ip : method { shift->{ ip } }
 
-=head2 library	
+=head2 library
 
 Dictionary of information about the library making the requests to the API, containing "name" and "version"
 
@@ -83,9 +83,9 @@ Locale string for the current user, for example en-US
 
 sub locale : method { shift->{ locale } }
 
-=head2 location	
+=head2 location
 
-Dictionary of information about the user’s current location, containing city, country, latitude, longitude, region and speed
+Dictionary of information about the user's current location, containing city, country, latitude, longitude, region and speed
 
 =cut
 
@@ -99,7 +99,7 @@ Dictionary of information about the current network connection, containing bluet
 
 sub metwork : method { shift->{ network } }
 
-=head2 os	
+=head2 os
 
 Dictionary of information about the operating system, containing name and version
 
@@ -107,7 +107,7 @@ Dictionary of information about the operating system, containing name and versio
 
 sub os : method { shift->{ os } }
 
-=head2 page	
+=head2 page
 
 Dictionary of information about the current page in the browser, containing hash, path, referrer, search, title and url
 Automatically collected by Analytics.js.
@@ -116,7 +116,7 @@ Automatically collected by Analytics.js.
 
 sub page : method { shift->{ page } }
 
-=head2 referrer	
+=head2 referrer
 
 Dictionary of information about the way the user was referred to the website or app, containing type, name, url and link
 
@@ -124,15 +124,15 @@ Dictionary of information about the way the user was referred to the website or 
 
 sub referrer : method { shift->{ referrer } }
 
-=head2 screen	
+=head2 screen
 
-Dictionary of information about the device’s screen, containing density, height and width
+Dictionary of information about the device's screen, containing density, height and width
 
 =cut
 
 sub screen : method { shift->{ screen } }
 
-=head2 timezone	
+=head2 timezone
 
 Timezones are sent as tzdata strings to add user timezone information which might be stripped from the timestamp
 Ex: America/New_York
@@ -141,7 +141,7 @@ Ex: America/New_York
 
 sub timezone : method { shift->{ timezone } }
 
-=head2 group_id	
+=head2 group_id
 
 Group / Account ID.
 This is useful in B2B use cases where you need to attribute your non-group calls to a company or account. It is relied on by several Customer Success and CRM tools.
@@ -150,7 +150,7 @@ This is useful in B2B use cases where you need to attribute your non-group calls
 
 sub groupId : method { shift->{ groupId } }
 
-=head2 traits	
+=head2 traits
 
 Dictionary of traits of the current user
 This is useful in cases where you need to track an event, but also associate information from a previous identify call. You should fill this object the same way you would fill traits in an identify call.
