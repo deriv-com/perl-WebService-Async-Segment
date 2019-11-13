@@ -7,9 +7,10 @@ use Net::Async::HTTP;
 use IO::Async::Loop;
 use Scalar::Util qw(blessed);
 use URI::Template;
-use JSON::MaybeUTF8 qw(encode_json_utf8);
+use JSON::MaybeUTF8 qw(encode_json_utf8 decode_json_utf8);
+use Syntax::Keyword::Try;
 
-
+use Log::Any qw($log);
 
 use constant SEGMENT_BASE_URL => 'https://api.segment.io/v1/';
 
@@ -62,7 +63,7 @@ sub ua {
 sub auth_headers {
     my ($self) = @_;
 
-    #For basic authentication by Net::Async::Http
+    #Basic authentication by Net::Async::Http
     return {user => $self->write_key, pass => ''}
 }
 
@@ -80,15 +81,36 @@ sub base_uri {
     return $self->{base_uri};
 }
 
-sub identify {
-    my ($self, %args) = @_;
+sub send_request {
+    my ($self, $method, %args) = @_;
+    
+    $log->tracef('Segment method %s called with params %s', $method, %args);
 
     return $self->ua->POST(
-        $self->endpoint('identify'),
+        $self->endpoint($method),
         encode_json_utf8(\%args),
         content_type => 'application/json',
         $self->auth_headers->%*,
-    );
+    )->then(sub {
+        my $result = shift;
+
+        $log->tracef('Segment response for %s method received: %s', $method, $result);
+
+        try {
+            my $response = decode_json_utf8($result->content);
+            if ($response->{success}){
+                 $log->tracef('Segment %s method call finished successfully.', $method);
+
+                return Future->done($response->{success});
+            }
+            return Future->fail($response);
+        }
+        catch {
+            return Future->fail($@);
+        }
+    })->on_fail(sub {
+        $log->errorf('Segment method %s call failed: %s', $method, shift);
+    });
 }
 
 1;
