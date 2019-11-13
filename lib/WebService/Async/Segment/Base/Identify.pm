@@ -3,9 +3,6 @@ package WebService::Async::Segment::Base::Identify;
 use strict;
 use warnings;
 
-use Moo;
-extends qw( WebService::Async::Segment::Base::Common );
-
 ## VERSION
 
 =head1 NAME
@@ -14,13 +11,41 @@ WebService::Async::Segment::Base::Identify - represents data for Identify comman
 
 =head1 DESCRIPTION
 
-This is generated based on the documentation in L<>
+This is generated based on the documentation in L<https://segment.com/docs/spec/identify/>
 
 =cut
 
-for qw(user_id traits){
-    has $_ => { is => 'ro' }
+sub new {
+    my ($class, %args) = @_;
+    Scalar::Util::weaken($args{segment}) if $args{segment};
+    bless \%args, $class;
 }
+
+=head1 METHODS
+=head2 user_id
+
+Unique identifier for the user in your database.
+
+=cut
+
+sub user_id : method { shift->{ user_id } }
+
+=head2 traits
+
+Free-form dictionary of traits of the user, like email or name.
+
+=cut
+
+sub traits : method { shift->{ traits } }
 
 1;
 
+__END__
+
+=head1 AUTHOR
+
+binary.com C<< BINARY@cpan.org >>
+
+=head1 LICENSE
+
+Copyright binary.com 2019. Licensed under the same terms as Perl itself.
