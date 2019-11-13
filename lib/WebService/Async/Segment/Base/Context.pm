@@ -61,7 +61,7 @@ sub device : method { shift->{ device } }
 
 =head2 ip
 
-Current user’s IP address
+Current user's IP address
 
 =cut
 

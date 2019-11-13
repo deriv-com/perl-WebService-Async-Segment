@@ -64,7 +64,7 @@ sub company : method { shift->{ company } }
 
 =head2 created_at
 
-Date the user’s account was first created.
+Date the user's account was first created.
 
 =cut
 
