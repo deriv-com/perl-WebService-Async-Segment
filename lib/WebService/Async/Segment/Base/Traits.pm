@@ -48,7 +48,7 @@ sub avatar : method { shift->{ avatar } }
 
 =head2 birthday
 
-User’s birthday
+User's birthday
 
 =cut
 

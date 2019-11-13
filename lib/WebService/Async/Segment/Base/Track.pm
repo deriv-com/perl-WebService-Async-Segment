@@ -25,8 +25,7 @@ sub new {
 
 =head2 event
 
-Boolean	Whether a user is active
-This is usually used to flag an .identify() call to just update the traits but not “last seen.”
+Name of the action that a user has performed.
 
 =cut
 
@@ -35,8 +34,7 @@ sub event : method { shift->{ active } }
 
 =head2 properties
 
-Boolean	Whether a user is active
-This is usually used to flag an .identify() call to just update the traits but not “last seen.”
+Free-form dictionary of properties of the event, like "revenue".
 
 =cut
 
