@@ -1,15 +1,15 @@
-package WebService::Async::Segment::Context;
+package WebService::Async::Segment::Common;
 
 use strict;
 use warnings;
 
-use parent qw(WebService::Async::Segment::Base::Context);
+use parent qw(WebService::Async::Segment::Base::Common);
 
 # VERSION
 
 =head1 NAME
 
-WebService::Async::Segment::Context - represents data for Segment
+WebService::Async::Segment::Common - represents data for Segment
 
 =head1 DESCRIPTION
 
