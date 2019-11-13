@@ -26,7 +26,7 @@ sub new {
 =head1 METHODS
 =head2 anonymous_id
 
-A pseudo-unique substitute for a User ID, for cases when you don’t have an absolutely unique identifier.
+A pseudo-unique substitute for a User ID, for cases when you don't have an absolutely unique identifier.
 
 =cut
 

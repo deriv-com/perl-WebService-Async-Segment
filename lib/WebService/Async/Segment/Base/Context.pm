@@ -27,7 +27,7 @@ sub new {
 =head2 active
 
 Boolean	Whether a user is active
-This is usually used to flag an .identify() call to just update the traits but not “last seen.”
+This is usually used to flag an .identify() call to just update the traits but not "last seen."
 
 =cut
 
