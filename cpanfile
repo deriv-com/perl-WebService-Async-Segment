@@ -7,6 +7,7 @@ requires 'URI::Escape', 0;
 
 requires 'Net::Async::HTTP', 0;
 requires 'JSON::MaybeUTF8', 0;
+requires 'IO::Async::SSL', 0;
 
 requires 'Syntax::Keyword::Try', 0;
 requires 'Path::Tiny', 0;
