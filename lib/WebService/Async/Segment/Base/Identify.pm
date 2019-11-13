@@ -22,13 +22,13 @@ sub new {
 }
 
 =head1 METHODS
-=head2 user_id
+=head2 userId
 
 Unique identifier for the user in your database.
 
 =cut
 
-sub user_id : method { shift->{ user_id } }
+sub userId : method { shift->{ userId } }
 
 =head2 traits
 

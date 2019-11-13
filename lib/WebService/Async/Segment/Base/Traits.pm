@@ -62,13 +62,13 @@ Company the user represents
 
 sub company : method { shift->{ company } }
 
-=head2 created_at
+=head2 createdAt
 
 Date the user's account was first created.
 
 =cut
 
-sub created_at : method { shift->{ created_at } }
+sub createdAt : method { shift->{ createdAt } }
 
 =head2 description
 
@@ -86,13 +86,13 @@ Email address of a user
 
 sub email : method { shift->{ email } }
 
-=head2 first_name
+=head2 firstName
 
 First name of a user
 
 =cut
 
-sub first_name : method { shift->{ first_name } }
+sub firstName : method { shift->{ firstName } }
 
 =head2 gender
 
@@ -116,7 +116,7 @@ Last name of a user
 
 =cut
 
-sub last_name : method { shift->{ last_name } }
+sub lastName : method { shift->{ lastName } }
 
 =head2 name
 
