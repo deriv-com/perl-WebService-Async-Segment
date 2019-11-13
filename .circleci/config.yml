@@ -1,0 +1,28 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: regentmarkets/debian-perl:stretch-5.26.2
+    steps:
+      - checkout
+      - run:
+          name: Install library dependencies
+          command: apt-get update && apt-get install -y --no-install-recommends libssl-dev zlib1g-dev pkg-config
+      - run:
+          name: Install dzil
+          command: cpanm --quiet --notest Dist::Zilla Dist::Zilla::App::Command::cover Devel::Cover::Report::Codecov
+      - run:
+          name: Install dzil author deps
+          command: cpanm --quiet --notest $(dzil authordeps --missing)
+      - run:
+          name: Install distribution deps
+          command: cpanm --quiet --notest $(dzil listdeps --author --missing)
+      - run:
+          name: Run smoke test
+          command: dzil smoke --release --author
+      - run:
+          name: Run coverage test
+          command: dzil cover -test -report codecov
+      - run:
+          name: Run extended author test
+          command: dzil xtest
