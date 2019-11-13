@@ -148,7 +148,7 @@ This is useful in B2B use cases where you need to attribute your non-group calls
 
 =cut
 
-sub group_id : method { shift->{ group_id } }
+sub groupId : method { shift->{ groupId } }
 
 =head2 traits	
 
@@ -165,7 +165,7 @@ User agent of the device making the request
 
 =cut
 
-sub user_agent : method { shift->{ user_agent } }
+sub userAgent : method { shift->{ userAgent } }
 
 1;
 

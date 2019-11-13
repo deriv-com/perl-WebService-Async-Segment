@@ -30,7 +30,7 @@ A pseudo-unique substitute for a User ID, for cases when you don't have an absol
 
 =cut
 
-sub anonymous_id : method { shift->{ anonymous_id } }
+sub anonymousId : method { shift->{ anonymousId } }
 
 =head2 context
 
@@ -48,13 +48,13 @@ Dictionary of destinations to either enable or disable.
 
 sub integrations : method { shift->{ integrations } }
 
-=head2 sent_at
+=head2 sentAt
 
 Timestamp of when a message is sent to Segment.
 
 =cut
 
-sub sent_at : method { shift->{ sent_at } }
+sub sentAt : method { shift->{ sentAt } }
 
 =head2 timestamp
 
@@ -70,7 +70,7 @@ Unique identifier for the user in database.
 
 =cut
 
-sub user_id : method { shift->{ user_id } }
+sub userId : method { shift->{ userId } }
 
 
 1;
