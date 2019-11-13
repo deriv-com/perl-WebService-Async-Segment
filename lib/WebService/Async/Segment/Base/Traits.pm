@@ -144,7 +144,7 @@ sub title : method { shift->{ title } }
 
 =head2 username
 
-User’s username. This should be unique to each user.
+User's username. This should be unique to each user.
 =cut
 
 sub username : method { shift->{ username } }
