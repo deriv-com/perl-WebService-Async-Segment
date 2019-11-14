@@ -19,10 +19,10 @@ sleep 1;
 
 my $segment = WebService::Async::Segment->new(write_key => 'test_token', base_uri => 'http://localhost:3000/v1/');
 
-my $result = $segment->send_request('track', userId => 'Test WebService::Async::Segment')->get;
+my $result = $segment->method_call('track', userId => 'Test WebService::Async::Segment')->get;
 ok $result, 'Result is OK';
 
-$result = $segment->send_request('test_call', userId => 'Test WebService::Async::Segment')->block_until_ready;
+$result = $segment->method_call('test_call', userId => 'Test WebService::Async::Segment')->block_until_ready;
 ok $result->is_failed(), 'Invalid request';
 is $result->failure, '404 Not Found', "Correct error message";
 

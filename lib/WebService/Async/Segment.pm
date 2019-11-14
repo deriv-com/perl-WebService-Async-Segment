@@ -9,8 +9,10 @@ use Scalar::Util qw(blessed);
 use URI::Template;
 use JSON::MaybeUTF8 qw(encode_json_utf8 decode_json_utf8);
 use Syntax::Keyword::Try;
-
 use Log::Any qw($log);
+use Date::Utility;
+
+use WebService::Async::Segment::Customer;
 
 use constant SEGMENT_BASE_URL => 'https://api.segment.io/v1/';
 
@@ -18,7 +20,7 @@ our $VERSION = '0.001';
 
 =head1 NAME
 
-WebService::Async::Segment - unofficial support for the Segment service
+WebService::Async::Segment - Segment HTTP API wrapper
 
 =head1 SYNOPSIS
 
@@ -26,6 +28,23 @@ WebService::Async::Segment - unofficial support for the Segment service
 
 =cut
 
+=head1 METHODS
+
+=head2 new
+
+Class constuctor of Segment wrapper class with following argunments:
+
+parameters:
+
+=over 4
+
+=item * C<write_key> - required. the api token of a Segment source.
+
+=item * C<base_uri> - optional. the base uri of the Segment host, primarily useful for setting up test mock servers.
+
+=back
+
+=cut
 
 sub new {
     my ($class, %args) = @_;
@@ -35,13 +54,32 @@ sub new {
     bless \%args, $class;
 }
 
+=head2 write_key
+
+Api token of the intended Segment source
+
+=cut
+
 sub write_key { shift->{ write_key } }
+
+=head2 loop
+
+The async loop object
+
+=cut
 
 sub loop {
     my $self = shift;
     $self->{loop} //= IO::Async::Loop->new;
     return $self->{loop};
 }
+
+
+=head2 ua
+
+A C<Net::Async::HTTP> object acting as HTTP user agent
+
+=cut
 
 sub ua {
     my ($self) = @_;
@@ -60,19 +98,45 @@ sub ua {
     }
 }
 
-sub auth_headers {
-    my ($self) = @_;
+=head2 basic_authentication
 
-    #Basic authentication by Net::Async::Http
+Settings required for basic HTTP authentication
+
+=cut
+
+sub basic_authentication {
+    my $self = shift;
+
+    #C<Net::Async::Http> basic authentication information
     return {user => $self->write_key, pass => ''}
 }
 
-sub endpoint {
-    my ($self, $endpoint, %args) = @_;
+=head2 absolute_uri
+
+Constructs the absolute URI based on two params:
+
+=over 4
+
+=item * C<relative_uri> - relative address of a server resource (api method name)
+
+=item * C<args> - HTTP args to be included in the uri
+
+=back
+
+=cut
+
+sub absolute_uri {
+    my ($self, $relative_uri, %args) = @_;
     URI::Template->new(
-        $self->base_uri . $endpoint
+        $self->base_uri . $relative_uri
     )->process(%args);
 }
+
+=head2 base_uri
+
+Server base uri as a C<URI> objects
+
+=cut
 
 sub base_uri {
     my $self = shift;
@@ -81,16 +145,39 @@ sub base_uri {
     return $self->{base_uri};
 }
 
-sub send_request {
+=head2 method_call
+
+Makes a Segment method call based on params. It automatically sets B<sentAt> to current time and B<context->{library}> to the current module.
+
+It takes two params:
+
+=over 4
+
+=item * C<method> - required. Segment method name (such as B<identify> and B<track>).
+
+=item * C<args> - optional. Method arguments represented as a hash. It may include either common, method-specific or custom fields. 
+Please refer to L<https://segment.com/docs/spec/common/> for a full list of common fieds supported by Segment.
+
+=back
+
+=cut
+
+sub method_call {
     my ($self, $method, %args) = @_;
 
-    $log->tracef('Segment method %s called with params %s', $method, %args);
+    $args{sentAt} = Date::Utility->new()->datetime_iso8601;
+    $args{context}->{library}->{name} = ref $self;
+    $args{context}->{library}->{version} = $VERSION;
+    
+    die 'Method cannot be empty' unless $method;
 
-    return $self->ua->POST(
-        $self->endpoint($method),
+    $log->tracef('Segment method %s called with params %s', $method, \%args);
+
+    $self->ua->POST(
+        $self->absolute_uri($method),
         encode_json_utf8(\%args),
         content_type => 'application/json',
-        $self->auth_headers->%*,
+        $self->basic_authentication->%*,
     )->then(sub {
         my $result = shift;
 
@@ -108,9 +195,34 @@ sub send_request {
         catch {
             return Future->fail($@);
         }
-    })->on_fail(sub {
-        $log->errorf('Segment method %s call failed: %s', $method, shift);
+    })->else (sub {
+        $log->errorf('Segment method %s call failed: %s', $method, \@_);
     });
+}
+
+=head2 new_customer
+
+Creates a new C<WebService::Async::Segment::Customer> object as the staring point of making B<identify> and B<track> calls.
+It takes an orgument:
+
+=over 4
+
+=item * C<args> - All customer information specified in B<identify> method documentation can be used here, along with any number of custom fields.
+Standard fields include B<userId>, B<anonymousId> and B<traits>; for more details please refer to L<https://segment.com/docs/spec/identify/>.
+You can set/reset standard attributes later by passing new values to C<WebService::Async::Segment::Customer::identify>.
+
+=back
+
+=cut
+
+sub new_customer {
+    my ($self, %args) = @_;
+    
+    $args{api_client} = $self;
+    
+    $log->tracef('A new customer is being created with: %s', \%args);
+
+    return WebService::Async::Segment::Customer->new(%args);
 }
 
 1;
