@@ -13,6 +13,9 @@ my %WriteMakefileArgs = (
     "ExtUtils::MakeMaker" => "6.64"
   },
   "DISTNAME" => "WebService-Async-Segment",
+  "EXE_FILES" => [
+    "bin/mock_segment.pl"
+  ],
   "LICENSE" => "perl",
   "MIN_PERL_VERSION" => "5.014000",
   "NAME" => "WebService::Async::Segment",
