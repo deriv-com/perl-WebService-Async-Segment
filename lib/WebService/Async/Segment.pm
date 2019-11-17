@@ -12,6 +12,8 @@ use Syntax::Keyword::Try;
 use Log::Any qw($log);
 use Date::Utility;
 
+use parent qw(IO::Async::Notifier);
+
 use WebService::Async::Segment::Customer;
 
 use constant SEGMENT_BASE_URL => 'https://api.segment.io/v1/';
@@ -46,13 +48,28 @@ parameters:
 
 =cut
 
-sub new {
-    my ($class, %args) = @_;
+sub _init {
+    my ($self, $args) = @_;
 
-    die 'No write key is provided' unless $args{write_key};
+    die 'No write key is provided' unless $args->{write_key};
 
-    bless \%args, $class;
+    for my $k (qw(write_key base_uri)) {
+        $self->{$k} = delete $args->{$k} if exists $args->{$k};
+    }
+
+    $self->next::method($args);
 }
+
+sub configure {
+    my ($self, %args) = @_;
+
+    for my $k (qw(write_key base_uri)) {
+        $self->{$k} = delete $args{$k} if exists $args{$k};
+    }
+
+    $self->next::method(%args);
+}
+
 
 =head2 write_key
 
@@ -62,18 +79,18 @@ API token of the intended Segment source
 
 sub write_key { shift->{ write_key } }
 
-=head2 loop
+=head2 base_uri
 
-The async loop object
+Server base uri as a C<URI> objects
 
 =cut
 
-sub loop {
+sub base_uri {
     my $self = shift;
-    $self->{loop} //= IO::Async::Loop->new;
-    return $self->{loop};
+    return $self->{base_uri} if blessed($self->{base_uri});
+    $self->{base_uri} = URI->new($self->{base_uri} // SEGMENT_BASE_URL);
+    return $self->{base_uri};
 }
-
 
 =head2 ua
 
@@ -83,19 +100,21 @@ A C<Net::Async::HTTP> object acting as HTTP user agent
 
 sub ua {
     my ($self) = @_;
-    $self->{ua} //= do {
-        $self->loop->add(
-            my $ua = Net::Async::HTTP->new(
-                fail_on_error            => 1,
-                decode_content           => 1,
-                pipeline                 => 0,
-                stall_timeout            => 60,
-                max_connections_per_host => 2,
-                user_agent               => 'Mozilla/4.0 (WebService::Async::Segment; BINARY@cpan.org; https://metacpan.org/pod/WebService::Async::Segment)',
-            )
-        );
-        $ua
-    }
+
+    return $self->{ua} if $self->{ua};
+
+    $self->{ua} = Net::Async::HTTP->new(
+        fail_on_error            => 1,
+        decode_content           => 1,
+        pipeline                 => 0,
+        stall_timeout            => 60,
+        max_connections_per_host => 2,
+        user_agent               => 'Mozilla/4.0 (WebService::Async::Segment; BINARY@cpan.org; https://metacpan.org/pod/WebService::Async::Segment)',
+    );
+
+    $self->add_child($self->{ua});
+
+    return $self->{ua};
 }
 
 =head2 basic_authentication
@@ -130,19 +149,6 @@ sub absolute_uri {
     URI::Template->new(
         $self->base_uri . $relative_uri
     )->process(%args);
-}
-
-=head2 base_uri
-
-Server base uri as a C<URI> objects
-
-=cut
-
-sub base_uri {
-    my $self = shift;
-    return $self->{base_uri} if blessed($self->{base_uri});
-    $self->{base_uri} = URI->new($self->{base_uri} // SEGMENT_BASE_URL);
-    return $self->{base_uri};
 }
 
 =head2 method_call
