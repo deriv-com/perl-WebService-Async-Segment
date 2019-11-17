@@ -17,7 +17,7 @@ WebService::Async::Segment::Customer - represents a customer's info
 =head1 METHODS
 =head2 new
 
-Class constructor accepting a hash of args containgin customer info along with the Segment api client (an obejct of class C<WebService::Async::Segment::Customer>. 
+Class constructor accepting a hash of args containgin customer info along with the Segment api client (an obejct of class C<WebService::Async::Segment::Customer>.
 
 =cut
 

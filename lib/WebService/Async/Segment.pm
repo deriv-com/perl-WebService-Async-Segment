@@ -38,7 +38,7 @@ parameters:
 
 =over 4
 
-=item * C<write_key> - required. the api token of a Segment source.
+=item * C<write_key> - required. the API token of a Segment source.
 
 =item * C<base_uri> - optional. the base uri of the Segment host, primarily useful for setting up test mock servers.
 
@@ -117,7 +117,7 @@ Constructs the absolute URI based on two params:
 
 =over 4
 
-=item * C<relative_uri> - relative address of a server resource (api method name)
+=item * C<relative_uri> - relative address of a server resource (API method name)
 
 =item * C<args> - HTTP args to be included in the uri
 
@@ -155,7 +155,7 @@ It takes two params:
 
 =item * C<method> - required. Segment method name (such as B<identify> and B<track>).
 
-=item * C<args> - optional. Method arguments represented as a hash. It may include either common, method-specific or custom fields. 
+=item * C<args> - optional. Method arguments represented as a hash. It may include either common, method-specific or custom fields.
 Please refer to L<https://segment.com/docs/spec/common/> for a full list of common fieds supported by Segment.
 
 =back
