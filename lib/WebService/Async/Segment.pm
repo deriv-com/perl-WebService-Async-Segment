@@ -20,7 +20,7 @@ our $VERSION = '0.001';
 
 =head1 NAME
 
-WebService::Async::Segment - Segment HTTP API wrapper
+WebService::Async::Segment - Unofficial support for the Segment service
 
 =head1 SYNOPSIS
 
@@ -56,7 +56,7 @@ sub new {
 
 =head2 write_key
 
-Api token of the intended Segment source
+API token of the intended Segment source
 
 =cut
 
@@ -168,7 +168,7 @@ sub method_call {
     $args{sentAt} = Date::Utility->new()->datetime_iso8601;
     $args{context}->{library}->{name} = ref $self;
     $args{context}->{library}->{version} = $VERSION;
-    
+
     die 'Method cannot be empty' unless $method;
 
     $log->tracef('Segment method %s called with params %s', $method, \%args);
@@ -217,9 +217,9 @@ You can set/reset standard attributes later by passing new values to C<WebServic
 
 sub new_customer {
     my ($self, %args) = @_;
-    
+
     $args{api_client} = $self;
-    
+
     $log->tracef('A new customer is being created with: %s', \%args);
 
     return WebService::Async::Segment::Customer->new(%args);

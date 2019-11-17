@@ -17,7 +17,7 @@ WebService::Async::Segment::Customer - represents a customer's info
 =head1 METHODS
 =head2 new
 
-Class constructor accepting a hash of args containgin customer info along with the Segment api client (an obejct of class C<WebService::Async::Segment::Customer>.
+Class constructor accepting a hash of args containgin customer info along with the Segment API client (an obejct of class C<WebService::Async::Segment::Customer>.
 
 =cut
 
@@ -46,7 +46,7 @@ sub anonymousId { shift->{ anonymousId } }
 =head2 traits
 
 Free-form dictionary of traits of the user, like email or name.
-For more information 
+For more information
 
 =cut
 
@@ -74,9 +74,9 @@ sub identify {
     for (qw(userId anonymousId traits)) {
          $args{$_}? $self->{$_} = $args{$_}:  $args{$_} = $self->$_;
     }
-    
+
     die 'Both userId and anonymousId are empty' unless $self->userId or $self->anonymousId;
-    
+
     my %call_args =  map { $args{$_} ? ($_ => $args{$_}): () } (keys %args);
 
     return $self->api_client->method_call('identify', %call_args);
@@ -93,11 +93,11 @@ It's also possible to include Segment common fields: L<https://segment.com/docs/
 
 sub track {
     my ($self, %args) = @_;
-    
+
     die 'Both userId and anonymousId are empty' unless $self->userId or $self->anonymousId;
-    
+
     my %call_args =  map { $args{$_} ? ($_ => $args{$_}): () } (keys %args);
-    
+
     $call_args{context}->{traits} = $self->{traits} if $self->{traits};
 
     return $self->api_client->send_request('track', %call_args);
@@ -114,3 +114,4 @@ binary.com C<< BINARY@cpan.org >>
 =head1 LICENSE
 
 Copyright binary.com 2019. Licensed under the same terms as Perl itself.
+
