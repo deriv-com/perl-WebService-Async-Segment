@@ -1,11 +1,6 @@
 # Automatically enables "strict", "warnings", "utf8" and Perl 5.10 features
 use Mojolicious::Lite;
-use Clone 'clone';
-use Date::Utility;
-use Data::UUID;
-use File::Basename;
-use Path::Tiny;
-use Try::Tiny;
+use Syntax::Keyword::Try;
 
 ################################################################################
 # Identify

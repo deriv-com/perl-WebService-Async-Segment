@@ -173,11 +173,11 @@ sub method_call {
 
     $log->tracef('Segment method %s called with params %s', $method, \%args);
 
-    $self->ua->POST(
+    return $self->ua->POST(
         $self->absolute_uri($method),
         encode_json_utf8(\%args),
         content_type => 'application/json',
-        $self->basic_authentication->%*,
+        %{$self->basic_authentication},
     )->then(sub {
         my $result = shift;
 
@@ -195,7 +195,7 @@ sub method_call {
         catch {
             return Future->fail($@);
         }
-    })->else (sub {
+    })->on_fail (sub {
         $log->errorf('Segment method %s call failed: %s', $method, \@_);
     });
 }

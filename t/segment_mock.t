@@ -19,7 +19,7 @@ sleep 1;
 
 my $segment = WebService::Async::Segment->new(write_key => 'test_token', base_uri => 'http://localhost:3000/v1/');
 
-my $result = $segment->method_call('track', userId => 'Test WebService::Async::Segment')->get;
+my $result = $segment->method_call('track', userId => 'Test WebService::Async::Segment');
 ok $result, 'Result is OK';
 
 $result = $segment->method_call('test_call', userId => 'Test WebService::Async::Segment')->block_until_ready;
