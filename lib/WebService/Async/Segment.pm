@@ -20,7 +20,7 @@ our $VERSION = '0.001';
 
 =head1 NAME
 
-WebService::Async::Segment - Segment HTTP API wrapper
+WebService::Async::Segment - Unofficial support for the Segment service
 
 =head1 SYNOPSIS
 
