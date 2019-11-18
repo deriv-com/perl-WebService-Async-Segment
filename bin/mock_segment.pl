@@ -7,11 +7,13 @@ use Syntax::Keyword::Try;
 
 post '/v1/identify' => sub {
     my $c = shift;
-    try{
+    try {
         my $data = $c->req->json;
-        $c->render(status => 200, json   => {success => 'true'});
+        $c->render(
+            status => 200,
+            json   => {success => 'true'});
     }
-    catch{
+    catch {
         $c->render(status => 400);
     };
 };
@@ -20,11 +22,13 @@ post '/v1/identify' => sub {
 ## Track
 post '/v1/track' => sub {
     my $c = shift;
-    try{
+    try {
         my $data = $c->req->json;
-        $c->render(status => 200, json   => {success => 'true'});
+        $c->render(
+            status => 200,
+            json   => {success => 'true'});
     }
-    catch{
+    catch {
         $c->render(status => 400);
     };
 };
