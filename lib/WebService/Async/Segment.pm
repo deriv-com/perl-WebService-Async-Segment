@@ -10,7 +10,7 @@ use URI::Template;
 use JSON::MaybeUTF8 qw(encode_json_utf8 decode_json_utf8);
 use Syntax::Keyword::Try;
 use Log::Any qw($log);
-use Date::Utility;
+#use Date::Utility;
 
 use parent qw(IO::Async::Notifier);
 
@@ -171,7 +171,7 @@ Please refer to L<https://segment.com/docs/spec/common/> for a full list of comm
 sub method_call {
     my ($self, $method, %args) = @_;
 
-    $args{sentAt} = Date::Utility->new()->datetime_iso8601;
+    $args{sentAt} = 12; #Date::Utility->new()->datetime_iso8601;
     $args{context}->{library}->{name} = ref $self;
     $args{context}->{library}->{version} = $VERSION;
 
