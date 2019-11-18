@@ -13,6 +13,9 @@ WebService::Async::Segment::Customer - represents a customer object with methods
 
 =head1 DESCRIPTION
 
+You can create object of this class directly or indirectly using B<WebService::Async::Segment::new_customer>.
+It is possible to B<identify> and B<track> calls with corresponding objects method created in this module.
+
 =cut
 
 =head1 METHODS
@@ -89,6 +92,8 @@ For a detailed information on the API call please refer to: L<https://segment.co
 
 It can be called with the following named params:
 
+=over
+
 =item * C<userId> - Unique identifier of a user (will overwrite object's attribute).
 
 =item * C<anonymousId> - A pseudo-unique substitute for a User ID (will overwrite object's attribute).
@@ -124,6 +129,8 @@ Makes a B<track> call on the current costomer. It can take any standard (B<event
 For more information on track API please refer to L<https://segment.com/docs/spec/track/>.
 
 It can be called with the following parameters:
+
+=over
 
 =item * C<event> - required. event name.
 

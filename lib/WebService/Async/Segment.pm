@@ -28,6 +28,8 @@ WebService::Async::Segment - Unofficial support for the Segment service
 
 =head1 DESCRIPTION
 
+This class acts as a B<Future>-based async Perl wrapper for segment HTTP API. 
+
 =cut
 
 =head1 METHODS

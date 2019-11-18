@@ -6,12 +6,16 @@ Unofficial support for segment.com API. It provides a Future based async wrapper
 ```
 
 use WebService::Async::Segment;
+use IO::Async::Loop;
 
-my $api_client = WebService::Async::Segment->new(
+my $segment = WebService::Async::Segment->new(
     write_key=>'SOURCE_WRITE_KEY'
 );
 
-my $customer = $api->new_customer(
+my $loop = IO::Async::Loop->new;
+$loop->add($segment);
+
+my $customer = $segment->new_customer(
     userId => 'some_id',
     traits => {
         email => 'xxx@example.com',
@@ -19,10 +23,10 @@ my $customer = $api->new_customer(
 );
 
 ### Identify api call
-$customer->identify->get;
+$customer->identify()->get;
 
 
 ### track api call
-$customer->track('buy', properties {...} )->get;
+$customer->track(event => 'buy', properties => {...} )->get;
 
 ```
