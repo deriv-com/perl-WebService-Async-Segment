@@ -3,6 +3,7 @@ use warnings;
 
 use Test::More;
 use Test::MockModule;
+use Date::Utility;
 
 use WebService::Async::Segment;
 use JSON::MaybeUTF8 qw(decode_json_utf8);
@@ -21,6 +22,8 @@ unless ($pid) {
     exec('perl', $mock_server, 'daemon') or print "couldn't exec mock server: $!";;
 }
 
+sleep 1;
+
 my $test_uri;
 my $test_req;
 my %test_args;
@@ -31,13 +34,11 @@ my $mock_http = Test::MockModule->new('Net::Async::HTTP');
 			return $mock_http->original('POST')->(@_);
 		});
 
-sleep 1;
+my $segment = WebService::Async::Segment->new(write_key => 'test_token', base_uri => $base_uri);
+my $loop = IO::Async::Loop->new;
+$loop->add($segment);
 
-subtest 'test result' => {
-	my $segment = WebService::Async::Segment->new(write_key => 'test_token', base_uri => $base_uri);
-	my $loop = IO::Async::Loop->new;
-	$loop->add($segment);
-
+subtest 'test result' => sub {
 	my $result = $segment->method_call('track', userId => 'Test User');
 	ok $result, 'Result is OK';
 
@@ -48,7 +49,6 @@ subtest 'test result' => {
 
 
 subtest 'test args' => sub {
-	my $epoch = time();
 	my $result = $segment->method_call('track', userId => 'Test User2');
 
 	is $test_uri, $base_uri.'track', 'Uri is correct';
@@ -59,8 +59,7 @@ subtest 'test args' => sub {
 		version => $WebService::Async::Segment::VERSION,
 	};
 	is $json_req->{userId}, 'Test User2', 'Json args are correct';
-	ok Date::Utility->new($json_req->{sentAt})->is_after(Date::Utility->new($epoch)), 'SentAt is not too early';
-	ok Date::Utility->new($json_req->{sentAt})->is_before(Date::Utility->new($epoch+1)), 'SentAt is not too late';
+	ok $json_req->{sentAt}, 'SentAt is set by API wrapper';
 
 	is $test_args{content_type}, 'application/json', 'Content type is correct';
 

@@ -7,7 +7,7 @@ use 5.014000;
 use ExtUtils::MakeMaker 6.48;
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "unofficial support for the Segment service",
+  "ABSTRACT" => "Unofficial support for the Segment service",
   "AUTHOR" => "binary.com <BINARY\@cpan.org>",
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.64"
