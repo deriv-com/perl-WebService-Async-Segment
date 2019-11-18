@@ -70,14 +70,13 @@ sub configure {
     $self->next::method(%args);
 }
 
-
 =head2 write_key
 
 API token of the intended Segment source
 
 =cut
 
-sub write_key { shift->{ write_key } }
+sub write_key { shift->{write_key} }
 
 =head2 base_uri
 
@@ -127,7 +126,10 @@ sub basic_authentication {
     my $self = shift;
 
     #C<Net::Async::Http> basic authentication information
-    return {user => $self->write_key, pass => ''}
+    return {
+        user => $self->write_key,
+        pass => ''
+    };
 }
 
 =head2 absolute_uri
@@ -146,9 +148,7 @@ Constructs the absolute URI based on two params:
 
 sub absolute_uri {
     my ($self, $relative_uri, %args) = @_;
-    URI::Template->new(
-        $self->base_uri . $relative_uri
-    )->process(%args);
+    URI::Template->new($self->base_uri . $relative_uri)->process(%args);
 }
 
 =head2 method_call
@@ -171,8 +171,8 @@ Please refer to L<https://segment.com/docs/spec/common/> for a full list of comm
 sub method_call {
     my ($self, $method, %args) = @_;
 
-    $args{sentAt} = 12; #Date::Utility->new()->datetime_iso8601;
-    $args{context}->{library}->{name} = ref $self;
+    $args{sentAt}                        = 12;          #Date::Utility->new()->datetime_iso8601;
+    $args{context}->{library}->{name}    = ref $self;
     $args{context}->{library}->{version} = $VERSION;
 
     die 'Method cannot be empty' unless $method;
@@ -184,26 +184,29 @@ sub method_call {
         encode_json_utf8(\%args),
         content_type => 'application/json',
         %{$self->basic_authentication},
-    )->then(sub {
-        my $result = shift;
+        )->then(
+        sub {
+            my $result = shift;
 
-        $log->tracef('Segment response for %s method received: %s', $method, $result);
+            $log->tracef('Segment response for %s method received: %s', $method, $result);
 
-        try {
-            my $response = decode_json_utf8($result->content);
-            if ($response->{success}){
-                 $log->tracef('Segment %s method call finished successfully.', $method);
+            try {
+                my $response = decode_json_utf8($result->content);
+                if ($response->{success}) {
+                    $log->tracef('Segment %s method call finished successfully.', $method);
 
-                return Future->done($response->{success});
+                    return Future->done($response->{success});
+                }
+                return Future->fail($response);
             }
-            return Future->fail($response);
+            catch {
+                return Future->fail($@);
+            }
         }
-        catch {
-            return Future->fail($@);
-        }
-    })->on_fail (sub {
-        $log->errorf('Segment method %s call failed: %s', $method, \@_);
-    });
+        )->on_fail(
+        sub {
+            $log->errorf('Segment method %s call failed: %s', $method, \@_);
+        });
 }
 
 =head2 new_customer
@@ -232,7 +235,6 @@ sub new_customer {
 }
 
 1;
-
 
 __END__
 

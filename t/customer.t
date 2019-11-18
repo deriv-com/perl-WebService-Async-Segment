@@ -18,7 +18,7 @@ unless ($pid) {
     my $mock_server = "$Bin/../bin/mock_segment.pl";
     open(STDOUT, '>/dev/null');
     open(STDERR, '>/dev/null');
-    exec('perl', $mock_server, 'daemon') or print "couldn't exec mock server: $!";;
+    exec('perl', $mock_server, 'daemon') or print "couldn't exec mock server: $!";
 }
 
 sleep 1;
@@ -27,13 +27,17 @@ my $test_uri;
 my $test_req;
 my %test_args;
 my $mock_http = Test::MockModule->new('Net::Async::HTTP');
-	$mock_http->mock('POST' => sub {
-			(undef, $test_uri, $test_req, %test_args) = @_;
+$mock_http->mock(
+    'POST' => sub {
+        (undef, $test_uri, $test_req, %test_args) = @_;
 
-			return $mock_http->original('POST')->(@_);
-		});
+        return $mock_http->original('POST')->(@_);
+    });
 
-my $segment = WebService::Async::Segment->new(write_key => 'DummyKey', base_uri => $base_uri);
+my $segment = WebService::Async::Segment->new(
+    write_key => 'DummyKey',
+    base_uri  => $base_uri
+);
 my $loop = IO::Async::Loop->new;
 $loop->add($segment);
 

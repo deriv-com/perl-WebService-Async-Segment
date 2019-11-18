@@ -13,7 +13,6 @@ WebService::Async::Segment::Customer - represents a customer's info
 
 =cut
 
-
 =head1 METHODS
 =head2 new
 
@@ -33,7 +32,7 @@ Unique identifier for the user in the database.
 
 =cut
 
-sub userId { shift->{ userId } }
+sub userId { shift->{userId} }
 
 =head2 anonymousId
 
@@ -41,7 +40,7 @@ A pseudo-unique substitute for a User ID, for cases when you don't have an absol
 
 =cut
 
-sub anonymousId { shift->{ anonymousId } }
+sub anonymousId { shift->{anonymousId} }
 
 =head2 traits
 
@@ -50,7 +49,7 @@ For more information
 
 =cut
 
-sub traits { shift->{ traits } }
+sub traits { shift->{traits} }
 
 =head2 api_client
 
@@ -58,7 +57,7 @@ A C<WebService::Async::Segment> object acting as Segment HTTP API client.
 
 =cut
 
-sub api_client { shift->{ api_client } }
+sub api_client { shift->{api_client} }
 
 =head2 identify
 
@@ -72,16 +71,15 @@ sub identify {
     my ($self, %args) = @_;
 
     for (qw(userId anonymousId traits)) {
-         $args{$_}? $self->{$_} = $args{$_}:  $args{$_} = $self->$_;
+        $args{$_} ? $self->{$_} = $args{$_} : $args{$_} = $self->$_;
     }
 
     die 'Both userId and anonymousId are empty' unless $self->userId or $self->anonymousId;
 
-    my %call_args =  map { $args{$_} ? ($_ => $args{$_}): () } (keys %args);
+    my %call_args = map { $args{$_} ? ($_ => $args{$_}) : () } (keys %args);
 
     return $self->api_client->method_call('identify', %call_args);
 }
-
 
 =head2 track
 
@@ -96,7 +94,7 @@ sub track {
 
     die 'Both userId and anonymousId are empty' unless $self->userId or $self->anonymousId;
 
-    my %call_args =  map { $args{$_} ? ($_ => $args{$_}): () } (keys %args);
+    my %call_args = map { $args{$_} ? ($_ => $args{$_}) : () } (keys %args);
 
     $call_args{context}->{traits} = $self->{traits} if $self->{traits};
 
