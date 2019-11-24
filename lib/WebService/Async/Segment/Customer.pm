@@ -125,7 +125,7 @@ sub identify {
 
 =head2 track
 
-Makes a B<track> call on the current costomer. It can take any standard (B<event> and B<properties>), common or custom fields.
+Makes a B<track> call on the current customer. It can take any standard (B<event> and B<properties>), common or custom fields.
 For more information on track API please refer to L<https://segment.com/docs/spec/track/>.
 
 It can be called with the following parameters:
