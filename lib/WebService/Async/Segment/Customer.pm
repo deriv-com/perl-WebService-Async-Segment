@@ -21,7 +21,7 @@ It is possible to B<identify> and B<track> calls with corresponding objects meth
 =head1 METHODS
 =head2 new
 
-Class constructor accepting a hash of named args containing customer info, along with a Segment API wrapper object (an obejct of class C<WebService::Async::Segment::Customer>.
+Class constructor accepting a hash of named args containing customer info, along with a Segment API wrapper object (an object of class C<WebService::Async::Segment::Customer>.
 The accepted params are:
 
 =over 4
@@ -196,4 +196,3 @@ binary.com C<< BINARY@cpan.org >>
 =head1 LICENSE
 
 Copyright binary.com 2019. Licensed under the same terms as Perl itself.
-
