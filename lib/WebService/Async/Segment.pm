@@ -215,7 +215,7 @@ sub method_call {
 
 =head2 new_customer
 
-Creates a new C<WebService::Async::Segment::Customer> object as the staring point of making B<identify> and B<track> calls.
+Creates a new C<WebService::Async::Segment::Customer> object as the starting point of making B<identify> and B<track> calls.
 It takes an orgument:
 
 =over 4
