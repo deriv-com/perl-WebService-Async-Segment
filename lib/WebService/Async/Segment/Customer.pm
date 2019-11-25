@@ -13,15 +13,17 @@ WebService::Async::Segment::Customer - represents a customer object with methods
 
 =head1 DESCRIPTION
 
-You can create object of this class directly or indirectly using B<WebService::Async::Segment::new_customer>.
-It is possible to B<identify> and B<track> calls with corresponding objects method created in this module.
+You can create objects directly or (preferably) indirectly using B<WebService::Async::Segment::new_customer>.
+Segment calls B<identify> and B<track> can be triggered on objects of this class.
 
 =cut
 
 =head1 METHODS
 =head2 new
 
-Class constructor accepting a hash of named args containing customer info, along with a Segment API wrapper object (an object of class C<WebService::Async::Segment::Customer>.
+Class constructor accepting a hash of named args containing customer info, along with a Segment API wrapper object (an object of class C<WebService::Async::Segment::Customer>).
+There is no need to make this call if you create an object using B<WebService::Async::Segment::new_customer> (as recommended).
+
 The accepted params are:
 
 =over 4

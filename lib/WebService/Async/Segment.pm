@@ -42,9 +42,9 @@ parameters:
 
 =over 4
 
-=item * C<write_key> - required. the API token of a Segment source.
+=item * C<write_key> - the API token of a Segment source.
 
-=item * C<base_uri> - optional. the base uri of the Segment host, primarily useful for setting up test mock servers.
+=item * C<base_uri> - the base uri of the Segment host, primarily useful for setting up test mock servers.
 
 =back
 
@@ -52,8 +52,6 @@ parameters:
 
 sub _init {
     my ($self, $args) = @_;
-
-    die 'No write key is provided' unless $args->{write_key};
 
     for my $k (qw(write_key base_uri)) {
         $self->{$k} = delete $args->{$k} if exists $args->{$k};
@@ -129,7 +127,7 @@ sub basic_authentication {
 
     #C<Net::Async::Http> basic authentication information
     return {
-        user => $self->write_key,
+        user => $self->write_key // '',
         pass => ''
     };
 }
