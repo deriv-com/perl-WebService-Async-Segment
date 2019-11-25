@@ -199,10 +199,10 @@ sub method_call {
 
                     return Future->done($response->{success});
                 }
-                return Future->fail($response);
+                return Future->fail('RequestFailed', 'segment', $response);
             }
             catch {
-                return Future->fail($@);
+                return Future->fail('InvalidServerResponse', 'segment', $@);
             }
         }
         )->on_fail(

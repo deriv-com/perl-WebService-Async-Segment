@@ -3,7 +3,7 @@ package WebService::Async::Segment::Customer;
 use strict;
 use warnings;
 
-use constant COMMON_FIELDS => qw(userId anonymousId traits context integrations timestamp);
+use constant COMMON_FIELDS => qw(context integrations timestamp);
 
 # VERSION
 
@@ -43,7 +43,7 @@ The accepted params are:
 sub new {
     my ($class, %args) = @_;
 
-    Scalar::Util::weaken($args{api_client}) if $args{api_client};
+    die 'Missing required arg api_client' unless $args{api_client};
 
     my $self;
 
@@ -105,9 +105,9 @@ It can be called with the following named params:
 =item * C<context> - Context information of the API call.
 Note that the API wrapper automatically sets context B<sentAt> and B<library> fields.
 
-=item * C<integrations> - A pseudo-unique substitute for a User ID, for cases when you don't have an absolutely unique identifier.
+=item * C<integrations> -  Dictionary of destinations to either enable or disable.
 
-=item * C<timestamp> - Dictionary of destinations to either enable or disable.
+=item * C<timestamp> - Timestamp when the message itself took place, defaulted to the current time by the Segment Tracking API. It is an ISO-8601 date string
 
 =item * C<custom> - Dictionary of custom business specific fileds.
 
@@ -120,7 +120,11 @@ About common fields please refer to: L<https://segment.com/docs/spec/common/>.
 sub identify {
     my ($self, %args) = @_;
 
-    my %call_args = $self->_make_call_args(\%args, [COMMON_FIELDS]);
+    for (qw(userId anonymousId traits)) {
+        $args{$_} ? ($self->{$_} = $args{$_}) : ($args{$_} = $self->{$_});
+    }
+
+    my %call_args = $self->_make_call_args(\%args, [COMMON_FIELDS, q(traits)]);
 
     return $self->api_client->method_call('identify', %call_args);
 }
@@ -138,18 +142,12 @@ It can be called with the following parameters:
 
 =item * C<properties> - Free-form dictionary of event properties.
 
-=item * C<userId> - Unique identifier of a user (will overwrite object's attribute).
-
-=item * C<anonymousId> - A pseudo-unique substitute for a User ID (will overwrite object's attribute).
-
-=item * C<traits> - Free-form dictionary of traits of the user, like email or name (will overwrite object's attribute).
-
 =item * C<context> - Context information of the API call.
 Note that the API wrapper automatically sets context B<sentAt> and B<library> fields.
 
-=item * C<integrations> - A pseudo-unique substitute for a User ID, for cases when you don't have an absolutely unique identifier.
+=item * C<integrations> -  Dictionary of destinations to either enable or disable.
 
-=item * C<timestamp> - Dictionary of destinations to either enable or disable.
+=item * C<timestamp> - Timestamp when the message itself took place, defaulted to the current time by the Segment Tracking API. It is an ISO-8601 date string.
 
 =item * C<custom> - Dictionary of custom business specific fileds.
 
@@ -172,10 +170,6 @@ sub track {
 sub _make_call_args {
     my ($self, $args, $accepted_fields) = @_;
 
-    for (qw(userId anonymousId traits)) {
-        $args->{$_} ? ($self->{$_} = $args->{$_}) : ($args->{$_} = $self->{$_});
-    }
-
     my $custom = delete $args->{custom} // {};
 
     for my $field (keys %$args) {
@@ -183,6 +177,10 @@ sub _make_call_args {
     }
 
     my %call_args = map { $args->{$_} ? ($_ => $args->{$_}) : () } (keys %$args);
+
+    for (qw(userId anonymousId)) {
+        $call_args{$_} = $self->{$_} if $self->{$_};
+    }
 
     return (%$custom, %call_args);
 }

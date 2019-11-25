@@ -143,32 +143,29 @@ subtest 'Track API call' => sub {
     ok $result->is_failed, 'Request is failed';
     is $result->failure, 'Both userId and anonymousId are empty', 'Expectedly failed because there was no ID';
 
-    $args->{anonymousId} = 1234;
-    $result = $customer->track(%$args)->get;
+    $customer->{anonymousId} = 1234;
+    $result = $customer->track(%$args, anonymousId => 1)->get;
     ok $result, 'Successful track call with anonymousId';
-    is $customer->anonymousId, 1234,  'Object anonymousId changed by calling track';
-    is $customer->userId,      undef, 'Obect userId is expectedly empty yet';
     test_call(
         'track',
         {
             event       => $event,
-            anonymousId => 1234,
-            traits      => $customer_info->{traits}});
+            anonymousId => 1234
+        });
 
     delete $customer->{anonymousId};
-    delete $args->{anonymousId};
-    $args->{userId} = 4321;
+    $customer->{userId} = 1234;
     $result = $customer->track(%$args)->get;
-    ok $result, 'Successful track with userId';
-    is $customer->userId,      4321,  'Object userId changed by calling track';
-    is $customer->anonymousId, undef, 'Object anonymousId is still empty';
+    ok $result, 'Successful track call with userId';
     test_call(
         'track',
         {
             event  => $event,
-            traits => $customer_info->{traits},
-            userId => 4321
+            userId => 1234
         });
+
+    delete $args->{anonymousId};
+    delete $args->{anonymousId};
 
     my $properties = {
         property1 => 1,
@@ -194,15 +191,16 @@ subtest 'Track API call' => sub {
 
     $result = $customer->track(%$args)->get;
     ok $result, 'successful call with full arg set';
-    is $customer->$_, $args->{$_}, "Object $_ changed by calling identify" for (qw(userId anonymousId traits));
+    cmp_ok $customer->$_ // '', 'ne', $args->{$_}, "Object $_ is not changed by calling track" for (qw(userId anonymousId));
+    is_deeply $customer->traits, $customer_info->{traits}, 'Customer traits are note changes by calling track';
     test_call(
         'track',
         {
             event       => $event,
             properties  => $properties,
-            traits      => $customer->traits,
-            userId      => 999990000,
-            anonymousId => 11112222,
+            traits      => undef,
+            anonymousId => undef,
+            userId      => 1234,
             %{$args->{custom}}
         },
         $args->{context});
@@ -221,7 +219,6 @@ sub test_call {
         'HTTP header is correct';
 
     my $json_req = decode_json_utf8($call_req);
-    #use Data::Dumper; warn Dumper $json_req; warn Dumper $args;
 
     is_deeply $json_req->{context}->{library},
         {
