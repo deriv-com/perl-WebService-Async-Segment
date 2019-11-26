@@ -144,7 +144,7 @@ It takes the following named parameters:
 
 =item * C<method> - required. Segment method name (such as B<identify> and B<track>).
 
-=item * C<args> - optional. Method arguments represented as a hash. It may include either common, method-specific or custom fields.
+=item * C<args> - optional. Method arguments represented as a hashref. This may include either common, method-specific or custom fields.
 Please refer to L<https://segment.com/docs/spec/common/> for a full list of common fieds supported by Segment.
 
 =back
