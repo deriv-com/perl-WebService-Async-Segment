@@ -136,7 +136,7 @@ sub basic_authentication {
 
 =head2 method_call
 
-Makes a Segment method call based on params. It automatically sets B<sentAt> to current time and B<context->{library}> to the current module.
+Makes a Segment method call. It automatically defaults C<sent_at> to the current time and C<< context->{library} >> to the current module.
 
 It takes two params:
 
