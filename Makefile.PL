@@ -44,6 +44,7 @@ my %WriteMakefileArgs = (
     "Test::MockModule" => 0,
     "Test::More" => "0.98",
     "Test::NoWarnings" => 0,
+    "Test::MockObject" => 0,
     "URI" => 0
   },
   "VERSION" => "0.001",
