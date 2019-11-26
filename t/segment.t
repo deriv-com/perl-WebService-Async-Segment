@@ -15,7 +15,7 @@ my $base_uri = 'http://dummy/';
 my $call_uri;
 my $call_req;
 my %call_http_args;
-my $mock_http = Test::MockModule->new('Net::Async::HTTP');
+my $mock_http     = Test::MockModule->new('Net::Async::HTTP');
 my $mock_response = '{"success":1}';
 $mock_http->mock(
     'POST' => sub {
@@ -24,10 +24,10 @@ $mock_http->mock(
         return $mock_response if $mock_response->isa('Future');
 
         my $response = $mock_response;
-       $response = '404 Not Found' unless $call_uri =~ /(identify|track)$/;
+        $response = '404 Not Found' unless $call_uri =~ /(identify|track)$/;
 
         my $res = Test::MockObject->new();
-        $res->mock(content => sub {$response});
+        $res->mock(content => sub { $response });
         Future->done($res);
     });
 
@@ -39,24 +39,25 @@ my $loop = IO::Async::Loop->new;
 $loop->add($segment);
 
 subtest 'call validation' => sub {
-    my  $result = $segment->method_call()->block_until_ready;
+    my $result = $segment->method_call()->block_until_ready;
     ok $result->is_failed(), 'Expected failure with no method';
     my @failure = $result->failure;
     is_deeply ['ValidationError', 'segment', 'Method name is missing'], [@failure[0 .. 2]], "Correct error message for call without ID";
-    
+
     $result = $segment->method_call('invalid_call', userId => 'Test User')->block_until_ready;
     ok $result->is_failed(), 'Invalid request will fail';
     @failure = $result->failure;
-    is_deeply['RequestFailed', 'segment', '404 Not Found'],  [@failure[0 .. 2]], 'Expected error detail for invalid uri';
-    
+    is_deeply ['RequestFailed', 'segment', '404 Not Found'], [@failure[0 .. 2]], 'Expected error detail for invalid uri';
+
     $result = $segment->method_call('identify')->block_until_ready;
     ok $result->is_failed(), 'Expected failure without id';
     @failure = $result->failure;
-    is_deeply ['ValidationError', 'segment', 'Both userId and anonymousId are missing'], [@failure[0 .. 2]], "Correct error message for call without ID";
+    is_deeply ['ValidationError', 'segment', 'Both userId and anonymousId are missing'], [@failure[0 .. 2]],
+        "Correct error message for call without ID";
 
     $result = $segment->method_call('identify', userId => 'Test User');
     ok $result, 'Result is OK with userId';
-    
+
     $mock_response = Future->fail('Dummy Failure', 'http POST', 'Just for test');
     $result = $segment->method_call('identify', userId => 'Test User')->block_until_ready;
     ok $result->is_failed(), 'Expected failure when POST fails';
@@ -79,7 +80,8 @@ subtest 'args validation' => sub {
         {
         name    => 'WebService::Async::Segment',
         version => $WebService::Async::Segment::VERSION,
-        }, 'Context library is valid';
+        },
+        'Context library is valid';
     is $json_req->{userId}, 'Test User2', 'Json args are correct';
     ok $json_req->{sentAt}, 'SentAt is set by API wrapper';
     my $sent_time = Date::Utility->new($json_req->{sentAt});

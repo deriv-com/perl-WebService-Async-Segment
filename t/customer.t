@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 use Test::MockModule;
 use Test::MockObject;
+use Test::Exception;
 use IO::Async::Loop;
 use JSON::MaybeUTF8 qw(decode_json_utf8);
 
@@ -15,15 +16,20 @@ my $base_uri = 'http://dummy/';
 my $call_uri;
 my $call_req;
 my %call_http_args;
-my $mock_http = Test::MockModule->new('Net::Async::HTTP');
+my $mock_http     = Test::MockModule->new('Net::Async::HTTP');
 my $mock_response = '{"success":1}';
 $mock_http->mock(
     'POST' => sub {
         (undef, $call_uri, $call_req, %call_http_args) = @_;
+
         return $mock_response if $mock_response->isa('Future');
-        my $response = Test::MockObject->new();
-        $response->mock(content => sub {$mock_response});
-        Future->done($response);
+
+        my $response = $mock_response;
+        $response = '404 Not Found' unless $call_uri =~ /(identify|track)$/;
+
+        my $res = Test::MockObject->new();
+        $res->mock(content => sub { $response });
+        Future->done($res);
     });
 
 my $segment = WebService::Async::Segment->new(
@@ -36,16 +42,25 @@ $loop->add($segment);
 my $customer_info = {
     userId => '123456',
     traits => {
-        email => 'test1@abc.com',
-        name  => 'Karl Tester'
+        email => 'test@ghost.test',
+        name  => 'Test Ghost',
     },
     anonymousId => '987654',
     ivalid_xyz  => 'Invalid value'
 };
 
-my $customer = $segment->new_customer(%$customer_info);
+throws_ok { WebService::Async::Segment::Customer->new() } qr/Missing required arg api_client/, 'Cannot create an onject without a segment api client';
+throws_ok { WebService::Async::Segment::Customer->new(api_client => 'invalid value') } qr/Invalid api_client value/,
+    'Cannot create an onject with invalid api_client value';
+my $customer = WebService::Async::Segment::Customer->new(api_client => $segment);
+ok $customer, 'Created an object with setting the required argument';
 
-is($customer->{$_}, $customer_info->{$_}, "$_ is properly set by Customer constructor") for (qw(userId traits anonymousId));
+$customer = $segment->new_customer(%$customer_info);
+
+is($customer->$_, $customer_info->{$_}, "$_ is properly set by Customer constructor") for (qw(userId anonymousId));
+is_deeply $customer->traits, $customer_info->{traits}, "traits are properly set by Customer constructor";
+cmp_ok $customer->traits, '!=', $customer_info->{traits}, 'traits are deeply copied';
+
 is $customer->{ivalid_xyz}, undef, 'Invalid args are filtered';
 
 subtest 'Identify API call' => sub {
@@ -54,13 +69,15 @@ subtest 'Identify API call' => sub {
 
     my $customer = $segment->new_customer();
 
-    is($customer->{$_}, undef, "$_ is expectedly undefined after constructor is called") for (qw(userId traits anonymousId));
+    is($customer->$_, undef, "$_ is expectedly undefined after constructor is called") for (qw(userId traits anonymousId));
 
     my $result = $customer->identify()->block_until_ready;
     ok $result->is_failed, 'Request is failed';
-    is $result->failure, 'ValidationError', 'Expectedly failed with no ID';
+    my @failure = $result->failure();
+    is_deeply [@failure[0 .. 2]], ['ValidationError', 'segment', 'Both userId and anonymousId are missing'], 'Expectedly failed with no ID';
 
     $result = $customer->identify(anonymousId => 1234)->get;
+
     ok $result, 'Successful identify call with anonymousId';
     is $customer->anonymousId, 1234,  'Object anonymousId changed by calling identify';
     is $customer->userId,      undef, 'Obect userId is expectedly empty yet';
@@ -101,7 +118,9 @@ subtest 'Identify API call' => sub {
 
     $result = $customer->identify(%$call_args)->get;
     ok $result, 'successful call with full arg set';
-    is $customer->$_, $call_args->{$_}, "Object $_ changed by calling identify" for (qw(userId anonymousId traits));
+    is $customer->$_, $call_args->{$_}, "Object $_ changed by calling identify" for (qw(userId anonymousId));
+    is_deeply $customer->traits, $call_args->{traits}, "traits are properly set by Customer constructor";
+    cmp_ok $customer->traits, '!=', $call_args->{traits}, 'traits are deeply copied';
     test_call(
         'identify',
         {
@@ -121,12 +140,12 @@ subtest 'Track API call' => sub {
     my $customer = $segment->new_customer(traits => $customer_info->{traits});
 
     is($customer->{$_}, undef, "$_ is properly set by Customer constructor") for (qw(userId anonymousId));
-    is $customer->{traits}, $customer_info->{traits}, "traits is properly set by Customer constructor";
+    is_deeply $customer->{traits}, $customer_info->{traits}, "traits are properly set by Customer constructor";
     my $args = {};
 
     my $result = $customer->track(%$args)->block_until_ready;
     ok $result->is_failed, 'Request is failed';
-    is $result->failure, 'Missing required argument "event"', 'Expectedly failed with no event';
+    is_deeply [$result->failure], ['ValidationError', 'segment', 'Missing required argument "event"'], 'Expectedly failed with no event';
 
     my $event = 'Test Event';
     $args->{event} = $event;
@@ -183,7 +202,7 @@ subtest 'Track API call' => sub {
     $result = $customer->track(%$args)->get;
     ok $result, 'successful call with full arg set';
     cmp_ok $customer->$_ // '', 'ne', $args->{$_}, "Object $_ is not changed by calling track" for (qw(userId anonymousId));
-    is_deeply $customer->traits, $customer_info->{traits}, 'Customer traits are note changes by calling track';
+    is_deeply $customer->traits, $customer_info->{traits}, 'Customer traits are not changes by calling track';
     test_call(
         'track',
         {

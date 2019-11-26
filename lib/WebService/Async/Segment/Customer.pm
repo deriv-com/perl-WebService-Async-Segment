@@ -44,10 +44,13 @@ sub new {
     my ($class, %args) = @_;
 
     die 'Missing required arg api_client' unless $args{api_client};
+    my $api_client = $args{api_client};
+    die 'Invalid api_client value' unless $api_client->isa('WebService::Async::Segment');
 
     my $self;
 
-    $self->{$_} = $args{$_} for (qw(api_client userId anonymousId traits));
+    $self->{$_} = $args{$_} for (qw(api_client userId anonymousId));
+    $self->{traits} = {%{$args{traits}}} if $args{traits};
 
     bless $self, $class;
 
@@ -120,13 +123,19 @@ About common fields please refer to: L<https://segment.com/docs/spec/common/>.
 sub identify {
     my ($self, %args) = @_;
 
-    for (qw(userId anonymousId traits)) {
-        $args{$_} ? ($self->{$_} = $args{$_}) : ($args{$_} = $self->{$_});
-    }
+    $args{traits} //= $self->traits if $self->traits;
 
-    my %call_args = $self->_make_call_args(\%args, [COMMON_FIELDS, q(traits)]);
+    my %call_args = $self->_make_call_args(\%args, [COMMON_FIELDS, qw(userId anonymousId traits)]);
 
-    return $self->api_client->method_call('identify', %call_args);
+    return $self->api_client->method_call('identify', %call_args)->then(
+        sub {
+            for (qw(userId anonymousId)) {
+                $self->{$_} = $args{$_} if $args{$_};
+            }
+            $self->{traits} = {%{$args{traits}}} if $args{traits};
+
+            return Future->done(@_);
+        });
 }
 
 =head2 track
@@ -160,7 +169,7 @@ About common API call params: L<https://segment.com/docs/spec/common/>.
 sub track {
     my ($self, %args) = @_;
 
-    return Future->fail('Missing required argument "event"') unless $args{event};
+    return Future->fail('ValidationError', 'segment', 'Missing required argument "event"') unless $args{event};
 
     my %call_args = $self->_make_call_args(\%args, [COMMON_FIELDS, qw(event properties)]);
 
@@ -169,18 +178,18 @@ sub track {
 
 sub _make_call_args {
     my ($self, $args, $accepted_fields) = @_;
-
+    $args //= {};
     my $custom = delete $args->{custom} // {};
 
     for my $field (keys %$args) {
         delete $args->{$field} unless grep { $field eq $_ } (@$accepted_fields);
     }
 
-    my %call_args = map { $args->{$_} ? ($_ => $args->{$_}) : () } (keys %$args);
-
     for (qw(userId anonymousId)) {
-        $call_args{$_} = $self->{$_} if $self->{$_};
+        $args->{$_} //= $self->$_ if $self->$_;
     }
+
+    my %call_args = map { $args->{$_} ? ($_ => $args->{$_}) : () } (keys %$args);
 
     return (%$custom, %call_args);
 }

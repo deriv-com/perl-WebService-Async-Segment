@@ -158,7 +158,8 @@ sub method_call {
 
     return Future->fail('ValidationError', 'segment', 'Method name is missing', 'segment', $method, %args) unless $method;
 
-    return Future->fail('ValidationError', 'segment', 'Both userId and anonymousId are missing', $method, %args) unless $args{userId} or $args{anonymousId};
+    return Future->fail('ValidationError', 'segment', 'Both userId and anonymousId are missing', $method, %args)
+        unless $args{userId} or $args{anonymousId};
 
     $log->tracef('Segment method %s called with params %s', $method, \%args);
 
@@ -183,8 +184,8 @@ sub method_call {
                 return Future->done($response->{success});
             }
             return Future->fail('RequestFailed', 'segment', $response_str);
-
-        })->on_fail(
+        }
+        )->on_fail(
         sub {
             $log->errorf('Segment method %s call failed: %s', $method, \@_);
         });
