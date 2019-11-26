@@ -138,7 +138,7 @@ sub basic_authentication {
 
 Makes a Segment method call. It automatically defaults C<sent_at> to the current time and C<< context->{library} >> to the current module.
 
-It takes two params:
+It takes the following named parameters:
 
 =over 4
 
