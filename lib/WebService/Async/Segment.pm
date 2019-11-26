@@ -80,7 +80,9 @@ sub write_key { shift->{write_key} }
 
 =head2 base_uri
 
-Server base uri as a C<URI> objects
+Server endpoint. Defaults to C<< https://api.segment.io/v1/ >>.
+
+Returns a L<URI> instance.
 
 =cut
 
