@@ -36,7 +36,7 @@ This class acts as a B<Future>-based async Perl wrapper for segment HTTP API.
 
 =head2 new
 
-Class constuctor of Segment wrapper class with following argunments:
+Class constructor, takes the following named arguments:
 
 parameters:
 
