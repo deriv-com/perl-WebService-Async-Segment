@@ -95,7 +95,7 @@ sub base_uri {
 
 =head2 ua
 
-A C<Net::Async::HTTP> object acting as HTTP user agent
+A L<Net::Async::HTTP> object acting as HTTP user agent
 
 =cut
 
