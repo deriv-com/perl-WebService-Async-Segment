@@ -6,7 +6,7 @@ use warnings;
 use Net::Async::HTTP;
 use IO::Async::Loop;
 use Scalar::Util qw(blessed);
-use URI::Template;
+use URI;
 use JSON::MaybeUTF8 qw(encode_json_utf8 decode_json_utf8);
 use Syntax::Keyword::Try;
 use Log::Any qw($log);
@@ -132,25 +132,6 @@ sub basic_authentication {
     };
 }
 
-=head2 absolute_uri
-
-Constructs the absolute URI based on two params:
-
-=over 4
-
-=item * C<relative_uri> - relative address of a server resource (API method name)
-
-=item * C<args> - HTTP args to be included in the uri
-
-=back
-
-=cut
-
-sub absolute_uri {
-    my ($self, $relative_uri, %args) = @_;
-    URI::Template->new($self->base_uri . $relative_uri)->process(%args);
-}
-
 =head2 method_call
 
 Makes a Segment method call based on params. It automatically sets B<sentAt> to current time and B<context->{library}> to the current module.
@@ -175,14 +156,14 @@ sub method_call {
     $args{context}->{library}->{name}    = ref $self;
     $args{context}->{library}->{version} = $VERSION;
 
-    return Future->fail('Method cannot be empty') unless $method;
+    return Future->fail('ValidationError', 'segment', 'Method name is missing', 'segment', $method, %args) unless $method;
 
-    return Future->fail('Both userId and anonymousId are empty') unless $args{userId} or $args{anonymousId};
+    return Future->fail('ValidationError', 'segment', 'Both userId and anonymousId are missing', $method, %args) unless $args{userId} or $args{anonymousId};
 
     $log->tracef('Segment method %s called with params %s', $method, \%args);
 
     return $self->ua->POST(
-        $self->absolute_uri($method),
+        URI->new_abs($method, $self->base_uri),
         encode_json_utf8(\%args),
         content_type => 'application/json',
         %{$self->basic_authentication},
@@ -192,20 +173,18 @@ sub method_call {
 
             $log->tracef('Segment response for %s method received: %s', $method, $result);
 
-            try {
-                my $response = decode_json_utf8($result->content);
-                if ($response->{success}) {
-                    $log->tracef('Segment %s method call finished successfully.', $method);
+            my $response_str = $result->content;
+            return Future->fail('RequestFailed', 'segment', $response_str) unless $response_str =~ /^{.*}$/;
 
-                    return Future->done($response->{success});
-                }
-                return Future->fail('RequestFailed', 'segment', $response);
+            my $response = decode_json_utf8($response_str);
+            if ($response->{success}) {
+                $log->tracef('Segment %s method call finished successfully.', $method);
+
+                return Future->done($response->{success});
             }
-            catch {
-                return Future->fail('InvalidServerResponse', 'segment', $@);
-            }
-        }
-        )->on_fail(
+            return Future->fail('RequestFailed', 'segment', $response_str);
+
+        })->on_fail(
         sub {
             $log->errorf('Segment method %s call failed: %s', $method, \@_);
         });

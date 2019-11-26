@@ -13,9 +13,6 @@ my %WriteMakefileArgs = (
     "ExtUtils::MakeMaker" => "6.64"
   },
   "DISTNAME" => "WebService-Async-Segment",
-  "EXE_FILES" => [
-    "bin/mock_segment.pl"
-  ],
   "LICENSE" => "perl",
   "MIN_PERL_VERSION" => "5.014000",
   "NAME" => "WebService::Async::Segment",
@@ -41,8 +38,6 @@ my %WriteMakefileArgs = (
     "File::Spec" => 0,
     "IO::Handle" => 0,
     "IPC::Open3" => 0,
-    "Mojolicious::Lite" => 0,
-    "Mojolicious::Plugin::RenderFile" => 0,
     "Path::Tiny" => 0,
     "Test::CheckDeps" => "0.010",
     "Test::Exception" => 0,
@@ -70,8 +65,6 @@ my %FallbackPrereqs = (
   "JSON::MaybeUTF8" => 0,
   "Log::Any" => 0,
   "Log::Any::Adapter" => 0,
-  "Mojolicious::Lite" => 0,
-  "Mojolicious::Plugin::RenderFile" => 0,
   "Net::Async::HTTP" => 0,
   "Path::Tiny" => 0,
   "Syntax::Keyword::Try" => 0,

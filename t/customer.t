@@ -3,36 +3,27 @@ use warnings;
 
 use Test::More;
 use Test::MockModule;
+use Test::MockObject;
 use IO::Async::Loop;
 use JSON::MaybeUTF8 qw(decode_json_utf8);
 
 use WebService::Async::Segment;
 use WebService::Async::Segment::Customer;
 
-use FindBin qw($Bin);
-
-my $base_uri = 'http://localhost:3000/v1/';
-
-my $pid = fork();
-die "fork error " unless defined($pid);
-unless ($pid) {
-    my $mock_server = "$Bin/../bin/mock_segment.pl";
-    open(STDOUT, '>/dev/null');
-    open(STDERR, '>/dev/null');
-    exec('perl', $mock_server, 'daemon') or print "couldn't exec mock server: $!";
-}
-
-sleep 1;
+my $base_uri = 'http://dummy/';
 
 my $call_uri;
 my $call_req;
 my %call_http_args;
 my $mock_http = Test::MockModule->new('Net::Async::HTTP');
+my $mock_response = '{"success":1}';
 $mock_http->mock(
     'POST' => sub {
         (undef, $call_uri, $call_req, %call_http_args) = @_;
-
-        return $mock_http->original('POST')->(@_);
+        return $mock_response if $mock_response->isa('Future');
+        my $response = Test::MockObject->new();
+        $response->mock(content => sub {$mock_response});
+        Future->done($response);
     });
 
 my $segment = WebService::Async::Segment->new(
@@ -67,7 +58,7 @@ subtest 'Identify API call' => sub {
 
     my $result = $customer->identify()->block_until_ready;
     ok $result->is_failed, 'Request is failed';
-    is $result->failure, 'Both userId and anonymousId are empty', 'Expectedly failed with no ID';
+    is $result->failure, 'ValidationError', 'Expectedly failed with no ID';
 
     $result = $customer->identify(anonymousId => 1234)->get;
     ok $result, 'Successful identify call with anonymousId';
@@ -141,7 +132,7 @@ subtest 'Track API call' => sub {
     $args->{event} = $event;
     $result = $customer->track(%$args)->block_until_ready;
     ok $result->is_failed, 'Request is failed';
-    is $result->failure, 'Both userId and anonymousId are empty', 'Expectedly failed because there was no ID';
+    is $result->failure, 'ValidationError', 'Expectedly failed because there was no ID';
 
     $customer->{anonymousId} = 1234;
     $result = $customer->track(%$args, anonymousId => 1)->get;
