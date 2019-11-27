@@ -21,15 +21,20 @@ use constant TIMEOUT          => 5;
 use constant SNAKE_FIELDS     => {
     anonymous_id => 'anonymousId',
     user_id      => 'userId',
-    sent_at      => 'sentAt'
-};
-use constant SNAKE_CONTEXT => {
-    user_agent => 'userAgent',
-    group_id   => 'groupId'
-};
-use constant SNAKE_DEVICE => {
-    advertising_id      => 'advertisingId',
-    ad_tracking_enabled => 'adTrackingEnabled'
+    sent_at      => 'sentAt',
+    traits       => {
+        created_at => 'createdAt',
+        first_name => 'firstName',
+        last_name  => 'lastName',
+    },
+    context => {
+        user_agent => 'userAgent',
+        group_id   => 'groupId',
+        device     => {
+            advertising_id      => 'advertisingId',
+            ad_tracking_enabled => 'adTrackingEnabled'
+        },
+    },
 };
 
 our $VERSION = '0.001';
@@ -159,7 +164,7 @@ It returns a L<Future> object that should be taken care of by the caller.
 sub method_call {
     my ($self, $method, %args) = @_;
 
-    $args{sentAt} = delete($args{sent_at}) || Date::Utility->new->datetime_iso8601 unless $args{sentAt};
+    $args{sent_at} = delete($args{sent_at}) // Date::Utility->new->datetime_iso8601;
     $args{context}->{library}->{name}    = ref $self;
     $args{context}->{library}->{version} = $VERSION;
 
@@ -168,17 +173,7 @@ sub method_call {
     return Future->fail('ValidationError', 'segment', 'Both user_id and anonymous_id are missing', $method, %args)
         unless $args{user_id} or $args{anonymous_id};
 
-    #convert from snake_case to camelCase for standard fields only
-    for my $key (keys SNAKE_FIELDS->%*) {
-        $args{SNAKE_FIELDS->{$key}} = delete $args{$key} if grep { $_ eq $key } keys %args;
-    }
-    for my $key (keys SNAKE_CONTEXT->%*) {
-        $args{context}->{SNAKE_CONTEXT->{$key}} = delete $args{context}->{$key} if grep { $_ eq $key } keys %{$args{context}};
-    }
-    for my $key (keys SNAKE_DEVICE->%*) {
-        $args{context}->{device}->{SNAKE_DEVICE->{$key}} = delete $args{context}->{device}->{$key}
-            if grep { $_ eq $key } keys %{$args{context}->{device}};
-    }
+    %args = _snake_case_to_camelCase(\%args, SNAKE_FIELDS)->%*;
 
     $log->tracef('Segment method %s called with params %s', $method, \%args);
 
@@ -235,6 +230,43 @@ sub new_customer {
     $log->tracef('A new customer is being created with: %s', \%args);
 
     return WebService::Async::Segment::Customer->new(%args);
+}
+
+=head2 _snake_case_to_camelCase
+
+Creates a deep copy of API call args, replacing the standard snake_case keys with camelCase keys, necessary to keep consistent with Segment HTTP API.
+It doesn't automatically alter any non-standard custom keys even they are snake_case.
+
+=over 4
+
+=item * C<$args> - call args as a hash reference.
+
+=item * C<$snake_fields> - a hash ref representing mapping from snake_case to camelCase.
+
+=back
+
+Returns a hash reference of args with altered keys.
+
+=cut
+
+sub _snake_case_to_camelCase {
+    my ($args, $snake_fields) = @_;
+
+    return $args unless ref($args) eq 'HASH';
+    $snake_fields = {} unless ref($args) eq 'HASH';
+
+    my $result;
+    for my $key (keys %$args) {
+        next unless defined $args->{$key};
+
+        if ($snake_fields->{$key} and not(ref $snake_fields->{$key})) {
+            my $camel = $snake_fields->{$key};
+            $result->{$camel} = _snake_case_to_camelCase($args->{$camel} // $args->{$key}, $snake_fields->{$camel});
+            next;
+        }
+        $result->{$key} = _snake_case_to_camelCase($args->{$key}, $snake_fields->{$key});
+    }
+    return $result;
 }
 
 1;

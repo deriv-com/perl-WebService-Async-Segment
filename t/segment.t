@@ -119,9 +119,18 @@ subtest 'snake_case to camelCase' => sub {
         custom_device       => 'custom5'
     );
 
-    my $result = $segment->method_call('track', %args, context => {%context, device => {%device}});
+    my %traits = (
+        first_name   => 'Ali',
+        last_name    => 'XYX',
+        created_at   => '2000-01-02',
+        custom_trait => 'value1',
+    );
 
-    is $call_uri, $base_uri . 'track', 'Uri is correct';
+    my $result = $segment->method_call(
+        'track', %args,
+        traits  => {%traits},
+        context => {%context, device => {%device}});
+
     my $json_req = decode_json_utf8($call_req);
 
     is_deeply $json_req->{context}->{library},
@@ -157,6 +166,15 @@ subtest 'snake_case to camelCase' => sub {
     }
     is $json_req->{context}->{device}->{custom_device}, $device{custom_device}, "Custom device filed is kept in snake_case";
     is $json_req->{context}->{device}->{customDevice}, undef, 'Custom device filed is not converted to camelCase';
+
+    for my $snake (qw(first_name last_name created_at)) {
+        my $camel = $snake;
+        $camel =~ s/(_([a-z]))/uc($2)/ge;
+        is $json_req->{traits}->{$snake}, undef, "snake_case trait $snake is removed";
+        is $json_req->{traits}->{$camel}, $traits{$snake}, "snake_case trait $snake is converted to camelCase $camel";
+    }
+    is $json_req->{traits}->{custom_trait}, $traits{custom_trait}, "Custom trait is kept in snake_case";
+    is $json_req->{traits}->{customTrait}, undef, 'Custom trait is not converted to camelCase';
 };
 
 done_testing();
