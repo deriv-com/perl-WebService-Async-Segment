@@ -1,5 +1,6 @@
 # perl-WebService-Async-Segment
 Unofficial support for segment.com API. It provides a [Future](https://metacpan.org/pod/Future)-based async wrapper for Segment HTTP API.
+Supports standard fields both in `snake_case` and `camelCase`.
 
 # Using
 
@@ -31,6 +32,7 @@ $customer->track(event => 'buy', properties => {...} )->get;
 
 ```
 
+# Notes
 
 - Segment HTTP API accepts fields in camelCase only (e.g. `userId` and `sentAt`); 
 the wrapper accepts these fields both in camelCase and snake_case (e.g. `user_id` and `sent_at`). 
