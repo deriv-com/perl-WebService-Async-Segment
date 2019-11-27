@@ -154,7 +154,7 @@ Please refer to L<https://segment.com/docs/spec/common/> for a full list of comm
 sub method_call {
     my ($self, $method, %args) = @_;
 
-    $args{sentAt}                        = Date::Utility->new()->datetime_iso8601;
+    $args{sentAt}                        = delete($args{sent_at}) || Date::Utility->new->datetime_iso8601;
     $args{context}->{library}->{name}    = ref $self;
     $args{context}->{library}->{version} = $VERSION;
 
