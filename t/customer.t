@@ -40,13 +40,13 @@ my $loop = IO::Async::Loop->new;
 $loop->add($segment);
 
 my $customer_info = {
-    userId => '123456',
-    traits => {
+    user_id => '123456',
+    traits  => {
         email => 'test@ghost.test',
         name  => 'Test Ghost',
     },
-    anonymousId => '987654',
-    ivalid_xyz  => 'Invalid value'
+    anonymous_id => '987654',
+    ivalid_xyz   => 'Invalid value'
 };
 
 throws_ok { WebService::Async::Segment::Customer->new() } qr/Missing required arg api_client/, 'Cannot create an onject without a segment api client';
@@ -57,7 +57,7 @@ ok $customer, 'Created an object with setting the required argument';
 
 $customer = $segment->new_customer(%$customer_info);
 
-is($customer->$_, $customer_info->{$_}, "$_ is properly set by Customer constructor") for (qw(userId anonymousId));
+is($customer->$_, $customer_info->{$_}, "$_ is properly set by Customer constructor") for (qw(user_id anonymous_id));
 is_deeply $customer->traits, $customer_info->{traits}, "traits are properly set by Customer constructor";
 cmp_ok $customer->traits, '!=', $customer_info->{traits}, 'traits are deeply copied';
 
@@ -69,18 +69,18 @@ subtest 'Identify API call' => sub {
 
     my $customer = $segment->new_customer();
 
-    is($customer->$_, undef, "$_ is expectedly undefined after constructor is called") for (qw(userId traits anonymousId));
+    is($customer->$_, undef, "$_ is expectedly undefined after constructor is called") for (qw(user_id traits anonymous_id));
 
     my $result = $customer->identify()->block_until_ready;
     ok $result->is_failed, 'Request is failed';
     my @failure = $result->failure();
-    is_deeply [@failure[0 .. 2]], ['ValidationError', 'segment', 'Both userId and anonymousId are missing'], 'Expectedly failed with no ID';
+    is_deeply [@failure[0 .. 2]], ['ValidationError', 'segment', 'Both user_id and anonymous_id are missing'], 'Expectedly failed with no ID';
 
-    $result = $customer->identify(anonymousId => 1234)->get;
+    $result = $customer->identify(anonymous_id => 1234)->get;
 
-    ok $result, 'Successful identify call with anonymousId';
-    is $customer->anonymousId, 1234,  'Object anonymousId changed by calling identify';
-    is $customer->userId,      undef, 'Obect userId is expectedly empty yet';
+    ok $result, 'Successful identify call with anonymous_id';
+    is $customer->anonymous_id, 1234,  'Object anonymous_id changed by calling identify';
+    is $customer->user_id,      undef, 'Obect user_id is expectedly empty yet';
     test_call(
         'identify',
         {
@@ -88,11 +88,11 @@ subtest 'Identify API call' => sub {
             traits      => $customer->traits
         });
 
-    delete $customer->{anonymousId};
-    $result = $customer->identify(userId => 4321)->get;
-    ok $result, 'Successful identify with userId';
-    is $customer->userId,      4321,  'Object userId changed by calling identify';
-    is $customer->anonymousId, undef, 'Object anonymousId is still empty';
+    delete $customer->{anonymous_id};
+    $result = $customer->identify(user_id => 4321)->get;
+    ok $result, 'Successful identify with user_id';
+    is $customer->user_id,      4321,  'Object user_id changed by calling identify';
+    is $customer->anonymous_id, undef, 'Object anonymous_id is still empty';
     test_call(
         'identify',
         {
@@ -101,9 +101,9 @@ subtest 'Identify API call' => sub {
         });
 
     my $call_args = {
-        anonymousId => 11112222,
-        userId      => 999990000,
-        traits      => {
+        anonymous_id => 11112222,
+        user_id      => 999990000,
+        traits       => {
             email        => 'mail@test.com',
             custom_trait => 'custom value'
         },
@@ -118,7 +118,7 @@ subtest 'Identify API call' => sub {
 
     $result = $customer->identify(%$call_args)->get;
     ok $result, 'successful call with full arg set';
-    is $customer->$_, $call_args->{$_}, "Object $_ changed by calling identify" for (qw(userId anonymousId));
+    is $customer->$_, $call_args->{$_}, "Object $_ changed by calling identify" for (qw(user_id anonymous_id));
     is_deeply $customer->traits, $call_args->{traits}, "traits are properly set by Customer constructor";
     cmp_ok $customer->traits, '!=', $call_args->{traits}, 'traits are deeply copied';
     test_call(
@@ -139,7 +139,7 @@ subtest 'Track API call' => sub {
 
     my $customer = $segment->new_customer(traits => $customer_info->{traits});
 
-    is($customer->{$_}, undef, "$_ is properly set by Customer constructor") for (qw(userId anonymousId));
+    is($customer->{$_}, undef, "$_ is properly set by Customer constructor") for (qw(user_id anonymous_id));
     is_deeply $customer->{traits}, $customer_info->{traits}, "traits are properly set by Customer constructor";
     my $args = {};
 
@@ -153,9 +153,9 @@ subtest 'Track API call' => sub {
     ok $result->is_failed, 'Request is failed';
     is $result->failure, 'ValidationError', 'Expectedly failed because there was no ID';
 
-    $customer->{anonymousId} = 1234;
-    $result = $customer->track(%$args, anonymousId => 1)->get;
-    ok $result, 'Successful track call with anonymousId';
+    $customer->{anonymous_id} = 1234;
+    $result = $customer->track(%$args, anonymous_id => 1)->get;
+    ok $result, 'Successful track call with anonymous_id';
     test_call(
         'track',
         {
@@ -163,10 +163,10 @@ subtest 'Track API call' => sub {
             anonymousId => 1234
         });
 
-    delete $customer->{anonymousId};
-    $customer->{userId} = 1234;
+    delete $customer->{anonymous_id};
+    $customer->{user_id} = 1234;
     $result = $customer->track(%$args)->get;
-    ok $result, 'Successful track call with userId';
+    ok $result, 'Successful track call with user_id';
     test_call(
         'track',
         {
@@ -174,19 +174,19 @@ subtest 'Track API call' => sub {
             userId => 1234
         });
 
-    delete $args->{anonymousId};
-    delete $args->{anonymousId};
+    delete $args->{anonymous_id};
+    delete $args->{anonymous_id};
 
     my $properties = {
         property1 => 1,
         property2 => 2,
     };
     $args = {
-        event       => $event,
-        properties  => $properties,
-        anonymousId => 11112222,
-        userId      => 999990000,
-        traits      => {
+        event        => $event,
+        properties   => $properties,
+        anonymous_id => 11112222,
+        user_id      => 999990000,
+        traits       => {
             email        => 'mail@test.com',
             custom_trait => 'custom value'
         },
@@ -201,7 +201,7 @@ subtest 'Track API call' => sub {
 
     $result = $customer->track(%$args)->get;
     ok $result, 'successful call with full arg set';
-    cmp_ok $customer->$_ // '', 'ne', $args->{$_}, "Object $_ is not changed by calling track" for (qw(userId anonymousId));
+    cmp_ok $customer->$_ // '', 'ne', $args->{$_}, "Object $_ is not changed by calling track" for (qw(user_id anonymous_id));
     is_deeply $customer->traits, $customer_info->{traits}, 'Customer traits are not changes by calling track';
     test_call(
         'track',
@@ -215,6 +215,57 @@ subtest 'Track API call' => sub {
         },
         $args->{context});
 
+};
+
+subtest 'snake_case and camelCase' => sub {
+    $call_uri = $call_req = undef;
+    undef %call_http_args;
+
+    my $customer_info = {
+        userId       => 12345,
+        anonymousId  => 54321,
+        custom_filed => 'custom value'
+    };
+    my $customer = $segment->new_customer(%$customer_info);
+
+    for my $snake (qw(user_id anonymous_id)) {
+        my $camel = $snake;
+        $camel =~ s/(_([a-z]))/uc($2)/ge;
+        is $customer->{$camel}, undef, "camelCase field $camel is removed";
+        is($customer->{$snake}, $customer_info->{$camel}, "camelCase arg $camel is converted to snake_case $snake");
+    }
+
+    my $result = $customer->identify()->get;
+    ok $result, 'Successful identify call';
+    test_call(
+        'identify',
+        {
+            userId       => 12345,
+            anonymousId  => 54321,
+            custom_filed => undef,
+        });
+
+    my $new_info = {
+        userId       => 11111,
+        anonymousId  => 22222,
+        custom_filed => 'custom value',
+    };
+    $result = $customer->identify(%$new_info)->get;
+    ok $result, 'Successful identify call with args';
+    test_call(
+        'identify',
+        {
+            userId       => 11111,
+            anonymousId  => 22222,
+            custom_filed => undef,
+        });
+
+    for my $snake (qw(user_id anonymous_id)) {
+        my $camel = $snake;
+        $camel =~ s/(_([a-z]))/uc($2)/ge;
+        is $customer->{$camel}, undef, "camelCase field $camel is removed";
+        is($customer->{$snake}, $new_info->{$camel}, "camelCase arg $camel is applied to customer's snake_case $snake");
+    }
 };
 
 sub test_call {

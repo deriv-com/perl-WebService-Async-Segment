@@ -44,7 +44,7 @@ subtest 'call validation' => sub {
     my @failure = $result->failure;
     is_deeply ['ValidationError', 'segment', 'Method name is missing'], [@failure[0 .. 2]], "Correct error message for call without ID";
 
-    $result = $segment->method_call('invalid_call', userId => 'Test User')->block_until_ready;
+    $result = $segment->method_call('invalid_call', user_id => 'Test User')->block_until_ready;
     ok $result->is_failed(), 'Invalid request will fail';
     @failure = $result->failure;
     is_deeply ['RequestFailed', 'segment', '404 Not Found'], [@failure[0 .. 2]], 'Expected error detail for invalid uri';
@@ -52,26 +52,26 @@ subtest 'call validation' => sub {
     $result = $segment->method_call('identify')->block_until_ready;
     ok $result->is_failed(), 'Expected failure without id';
     @failure = $result->failure;
-    is_deeply ['ValidationError', 'segment', 'Both userId and anonymousId are missing'], [@failure[0 .. 2]],
+    is_deeply ['ValidationError', 'segment', 'Both user_id and anonymous_id are missing'], [@failure[0 .. 2]],
         "Correct error message for call without ID";
 
-    $result = $segment->method_call('identify', userId => 'Test User');
-    ok $result, 'Result is OK with userId';
+    $result = $segment->method_call('identify', user_id => 'Test User');
+    ok $result, 'Result is OK with user_id';
 
     $mock_response = Future->fail('Dummy Failure', 'http POST', 'Just for test');
-    $result = $segment->method_call('identify', userId => 'Test User')->block_until_ready;
+    $result = $segment->method_call('identify', user_id => 'Test User')->block_until_ready;
     ok $result->is_failed(), 'Expected failure when POST fails';
     @failure = $result->failure;
     is_deeply ['Dummy Failure', 'http POST', 'Just for test'], [@failure[0 .. 2]], "Correct error details for POST failure";
     $mock_response = '{"success":1}';
 
-    $result = $segment->method_call('identify', anonymousId => 'Test anonymousId');
-    ok $result, 'Result is OK with anonymousId';
+    $result = $segment->method_call('identify', anonymous_id => 'Test anonymous_id');
+    ok $result, 'Result is OK with anonymous_id';
 };
 
 subtest 'args validation' => sub {
     my $epoch = time();
-    my $result = $segment->method_call('track', userId => 'Test User2');
+    my $result = $segment->method_call('track', user_id => 'Test User2');
 
     is $call_uri, $base_uri . 'track', 'Uri is correct';
     my $json_req = decode_json_utf8($call_req);
@@ -97,6 +97,66 @@ subtest 'args validation' => sub {
         },
         'HTTP header is correct';
 
+};
+
+subtest 'snake_case to camelCase' => sub {
+    my $epoch = time();
+
+    my %args = (
+        user_id      => 'user1',
+        anonymous_id => 'anonymous2',
+        sent_at      => Date::Utility->new($epoch)->datetime_iso8601,
+        custom_field => 'custom3'
+    );
+    my %context = (
+        user_agent     => 'Mozila',
+        group_id       => '1234',
+        custom_context => 'custom4'
+    );
+    my %device = (
+        advertising_id      => '111111',
+        ad_tracking_enabled => 1,
+        custom_device       => 'custom5'
+    );
+
+    my $result = $segment->method_call('track', %args, context => {%context, device => {%device}});
+
+    is $call_uri, $base_uri . 'track', 'Uri is correct';
+    my $json_req = decode_json_utf8($call_req);
+
+    is_deeply $json_req->{context}->{library},
+        {
+        name    => 'WebService::Async::Segment',
+        version => $WebService::Async::Segment::VERSION,
+        },
+        'Context library is valid';
+
+    for my $snake (qw(user_id anonymous_id sent_at)) {
+        my $camel = $snake;
+        $camel =~ s/(_([a-z]))/uc($2)/ge;
+        is $json_req->{$snake}, undef, "snake_case field $snake is removed";
+        is($json_req->{$camel}, $args{$snake}, "snake_case arg $snake is converted to camelCase $camel");
+    }
+    is $json_req->{custom_field}, $args{custom_field}, "Custom filed is kept in snake_case";
+    is $json_req->{customField}, undef, 'Custom filed is not converted to camelCase';
+
+    for my $snake (qw(user_agent group_id)) {
+        my $camel = $snake;
+        $camel =~ s/(_([a-z]))/uc($2)/ge;
+        is $json_req->{context}->{$snake}, undef, "snake_case context field $snake is removed";
+        is $json_req->{context}->{$camel}, $context{$snake}, "snake_case context filed $snake is converted to camelCase $camel";
+    }
+    is $json_req->{context}->{custom_context}, $context{custom_context}, "Custom context filed is kept in snake_case";
+    is $json_req->{context}->{customContext}, undef, 'Custom context filed is not converted to camelCase';
+
+    for my $snake (qw(advertising_id ad_racking_enabled)) {
+        my $camel = $snake;
+        $camel =~ s/(_([a-z]))/uc($2)/ge;
+        is $json_req->{context}->{device}->{$snake}, undef, "snake_case device field $snake is removed";
+        is $json_req->{context}->{device}->{$camel}, $device{$snake}, "snake_case device filed $snake is converted to camelCase $camel";
+    }
+    is $json_req->{context}->{device}->{custom_device}, $device{custom_device}, "Custom device filed is kept in snake_case";
+    is $json_req->{context}->{device}->{customDevice}, undef, 'Custom device filed is not converted to camelCase';
 };
 
 done_testing();

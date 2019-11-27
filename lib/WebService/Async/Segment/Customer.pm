@@ -13,16 +13,17 @@ WebService::Async::Segment::Customer - represents a customer object with methods
 
 =head1 DESCRIPTION
 
-You can create objects directly or (preferably) indirectly using B<WebService::Async::Segment::new_customer>.
+You can create objects directly or (preferably) indirectly using C<< WebService::Async::Segment::new_customer >>.
 Segment calls B<identify> and B<track> can be triggered on objects of this class.
 
 =cut
 
 =head1 METHODS
+
 =head2 new
 
-Class constructor accepting a hash of named args containing customer info, along with a Segment API wrapper object (an object of class C<WebService::Async::Segment::Customer>).
-There is no need to make this call if you create an object using B<WebService::Async::Segment::new_customer> (as recommended).
+Class constructor accepting a hash of named args containing customer info, along with a Segment API wrapper object (an object of class L<WebService::Async::Segment::Customer>).
+There is no need to make this call if you create an object using C<< WebService::Async::Segment::new_customer >> (as recommended).
 
 The accepted params are:
 
@@ -30,9 +31,9 @@ The accepted params are:
 
 =item * C<api_client> - Segment API wrapper object.
 
-=item * C<userId> - Unique identifier of a user.
+=item * C<user_id> or C<userId> - Unique identifier of a user.
 
-=item * C<anonymousId> - A pseudo-unique substitute for a User ID, for cases when you don't have an absolutely unique identifier.
+=item * C<anonymous_id> or C<anonymousId> - A pseudo-unique substitute for a User ID, for cases when you don't have an absolutely unique identifier.
 
 =item * C<traits> - Free-form dictionary of traits of the user, like email or name.
 
@@ -49,7 +50,10 @@ sub new {
 
     my $self;
 
-    $self->{$_} = $args{$_} for (qw(api_client userId anonymousId));
+    $args{user_id}      = delete $args{userId}      if $args{userId};
+    $args{anonymous_id} = delete $args{anonymousId} if $args{anonymousId};
+
+    $self->{$_} = $args{$_} for (qw(api_client user_id anonymous_id));
     $self->{traits} = {%{$args{traits}}} if $args{traits};
 
     bless $self, $class;
@@ -57,21 +61,21 @@ sub new {
     return $self;
 }
 
-=head2 userId
+=head2 user_id
 
 Unique identifier for the user in the database.
 
 =cut
 
-sub userId { shift->{userId} }
+sub user_id { shift->{user_id} }
 
-=head2 anonymousId
+=head2 anonymous_id
 
 A pseudo-unique substitute for a User ID, for cases when you don't have an absolutely unique identifier.
 
 =cut
 
-sub anonymousId { shift->{anonymousId} }
+sub anonymous_id { shift->{anonymous_id} }
 
 =head2 traits
 
@@ -99,9 +103,9 @@ It can be called with the following named params:
 
 =over
 
-=item * C<userId> - Unique identifier of a user (will overwrite object's attribute).
+=item * C<user_id> or C<userId> - Unique identifier of a user (will overwrite object's attribute).
 
-=item * C<anonymousId> - A pseudo-unique substitute for a User ID (will overwrite object's attribute).
+=item * C<anonymous_id> or C<anonymousId> - A pseudo-unique substitute for a User ID (will overwrite object's attribute).
 
 =item * C<traits> - Free-form dictionary of traits of the user, like email or name (will overwrite object's attribute).
 
@@ -118,6 +122,8 @@ Note that the API wrapper automatically sets context B<sentAt> and B<library> fi
 
 About common fields please refer to: L<https://segment.com/docs/spec/common/>.
 
+It returns a L<Future> object which should be taken care of by the caller.
+
 =cut
 
 sub identify {
@@ -125,11 +131,14 @@ sub identify {
 
     $args{traits} //= $self->traits if $self->traits;
 
-    my %call_args = $self->_make_call_args(\%args, [COMMON_FIELDS, qw(userId anonymousId traits)]);
+    $args{user_id}      = delete $args{userId}      if $args{userId};
+    $args{anonymous_id} = delete $args{anonymousId} if $args{anonymousId};
+
+    my %call_args = $self->_make_call_args(\%args, [COMMON_FIELDS, qw(user_id anonymous_id traits)]);
 
     return $self->api_client->method_call('identify', %call_args)->then(
         sub {
-            for (qw(userId anonymousId)) {
+            for (qw(user_id anonymous_id)) {
                 $self->{$_} = $args{$_} if $args{$_};
             }
             $self->{traits} = {%{$args{traits}}} if $args{traits};
@@ -164,6 +173,8 @@ Note that the API wrapper automatically sets context B<sentAt> and B<library> fi
 
 About common API call params: L<https://segment.com/docs/spec/common/>.
 
+It returns a L<Future> object which should be taken care of by the caller.
+
 =cut
 
 sub track {
@@ -185,7 +196,7 @@ sub _make_call_args {
         delete $args->{$field} unless grep { $field eq $_ } (@$accepted_fields);
     }
 
-    for (qw(userId anonymousId)) {
+    for (qw(user_id anonymous_id)) {
         $args->{$_} //= $self->$_ if $self->$_;
     }
 

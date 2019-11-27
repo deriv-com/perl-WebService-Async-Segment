@@ -17,14 +17,26 @@ use parent qw(IO::Async::Notifier);
 use WebService::Async::Segment::Customer;
 
 use constant SEGMENT_BASE_URL => 'https://api.segment.io/v1/';
+use constant TIMEOUT          => 5;
+use constant SNAKE_FIELDS     => {
+    anonymous_id => 'anonymousId',
+    user_id      => 'userId',
+    sent_at      => 'sentAt'
+};
+use constant SNAKE_CONTEXT => {
+    user_agent => 'userAgent',
+    group_id   => 'groupId'
+};
+use constant SNAKE_DEVICE => {
+    advertising_id      => 'advertisingId',
+    ad_tracking_enabled => 'adTrackingEnabled'
+};
 
 our $VERSION = '0.001';
 
 =head1 NAME
 
 WebService::Async::Segment - Unofficial support for the Segment service
-
-=head1 SYNOPSIS
 
 =head1 DESCRIPTION
 
@@ -34,9 +46,9 @@ This class acts as a L<Future>-based async Perl wrapper for segment HTTP API.
 
 =head1 METHODS
 
-=head2 new
+=head2 configure
 
-Class constructor, takes the following named arguments:
+Overrides the same method of the parent class L<IO::Async::Notifier>; required for object initialization.
 
 parameters:
 
@@ -49,16 +61,6 @@ parameters:
 =back
 
 =cut
-
-sub _init {
-    my ($self, $args) = @_;
-
-    for my $k (qw(write_key base_uri)) {
-        $self->{$k} = delete $args->{$k} if exists $args->{$k};
-    }
-
-    $self->next::method($args);
-}
 
 sub configure {
     my ($self, %args) = @_;
@@ -108,7 +110,7 @@ sub ua {
         fail_on_error            => 1,
         decode_content           => 1,
         pipeline                 => 0,
-        stall_timeout            => 60,
+        stall_timeout            => TIMEOUT,
         max_connections_per_host => 2,
         user_agent               => 'Mozilla/4.0 (WebService::Async::Segment; BINARY@cpan.org; https://metacpan.org/pod/WebService::Async::Segment)',
     );
@@ -145,23 +147,39 @@ It takes the following named parameters:
 =item * C<method> - required. Segment method name (such as B<identify> and B<track>).
 
 =item * C<args> - optional. Method arguments represented as a hash. It may include either common, method-specific or custom fields.
-Please refer to L<https://segment.com/docs/spec/common/> for a full list of common fieds supported by Segment.
+It should include either a B<user_id> or B<customer_id> anyway.
 
 =back
+
+Please refer to L<https://segment.com/docs/spec/common/> for a full list of common fieds supported by Segment.
+
+It returns a L<Future> object that should be taken care of by the caller.
 
 =cut
 
 sub method_call {
     my ($self, $method, %args) = @_;
 
-    $args{sentAt}                        = Date::Utility->new()->datetime_iso8601;
+    $args{sent_at} = delete($args{sent_at}) || Date::Utility->new->datetime_iso8601;
     $args{context}->{library}->{name}    = ref $self;
     $args{context}->{library}->{version} = $VERSION;
 
     return Future->fail('ValidationError', 'segment', 'Method name is missing', 'segment', $method, %args) unless $method;
 
-    return Future->fail('ValidationError', 'segment', 'Both userId and anonymousId are missing', $method, %args)
-        unless $args{userId} or $args{anonymousId};
+    return Future->fail('ValidationError', 'segment', 'Both user_id and anonymous_id are missing', $method, %args)
+        unless $args{user_id} or $args{anonymous_id};
+
+    #convert from snake_case to camelCase for standard fields only
+    for my $key (keys SNAKE_FIELDS->%*) {
+        $args{SNAKE_FIELDS->{$key}} = delete $args{$key} if grep { $_ eq $key } keys %args;
+    }
+    for my $key (keys SNAKE_CONTEXT->%*) {
+        $args{context}->{SNAKE_CONTEXT->{$key}} = delete $args{context}->{$key} if grep { $_ eq $key } keys %{$args{context}};
+    }
+    for my $key (keys SNAKE_DEVICE->%*) {
+        $args{context}->{device}->{SNAKE_DEVICE->{$key}} = delete $args{context}->{device}->{$key}
+            if grep { $_ eq $key } keys %{$args{context}->{device}};
+    }
 
     $log->tracef('Segment method %s called with params %s', $method, \%args);
 
@@ -196,13 +214,15 @@ sub method_call {
 =head2 new_customer
 
 Creates a new C<WebService::Async::Segment::Customer> object as the starting point of making B<identify> and B<track> calls.
-It takes an argument:
+It may takes the following named standard arguments to populate the customer onject with:
 
 =over 4
 
-=item * C<args> - All customer information specified in B<identify> method documentation can be used here, along with any number of custom fields.
-Standard fields include B<userId>, B<anonymousId> and B<traits>; for more details please refer to L<https://segment.com/docs/spec/identify/>.
-You can set/reset standard attributes later by passing new values to C<WebService::Async::Segment::Customer::identify>.
+=item * C<userId> - Unique identifier of a user.
+
+=item * C<anonymousId> - A pseudo-unique substitute for a User ID, for cases when you don't have an absolutely unique identifier.
+
+=item * C<traits> - Free-form dictionary of traits of the user, like email or name.
 
 =back
 
