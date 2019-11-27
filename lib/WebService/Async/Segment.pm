@@ -26,6 +26,9 @@ use constant SNAKE_FIELDS     => {
         created_at => 'createdAt',
         first_name => 'firstName',
         last_name  => 'lastName',
+        address    => {
+            postal_code => 'postalCode',
+        },
     },
     context => {
         user_agent => 'userAgent',

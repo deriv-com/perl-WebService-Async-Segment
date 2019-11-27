@@ -125,6 +125,9 @@ subtest 'snake_case to camelCase' => sub {
         last_name    => 'XYX',
         created_at   => '2000-01-02',
         custom_trait => 'value1',
+        address      => {
+            postal_code => '54-56-77',
+        },
     );
 
     my $result = $segment->method_call(
@@ -174,6 +177,8 @@ subtest 'snake_case to camelCase' => sub {
         is $json_req->{traits}->{$snake}, undef, "snake_case trait $snake is removed";
         is $json_req->{traits}->{$camel}, $traits{$snake}, "snake_case trait $snake is converted to camelCase $camel";
     }
+    is $json_req->{traits}->{address}->{postal_code}, undef, "snake_case trait address->postal_code is removed";
+    is $json_req->{traits}->{address}->{postalCode}, $traits{address}->{postal_code}, "snake_case trait address->postal_code is converted to camelCase address->postalCode";
     is $json_req->{traits}->{custom_trait}, $traits{custom_trait}, "Custom trait is kept in snake_case";
     is $json_req->{traits}->{customTrait}, undef, 'Custom trait is not converted to camelCase';
 };
