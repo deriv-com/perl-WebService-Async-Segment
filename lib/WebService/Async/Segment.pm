@@ -159,7 +159,7 @@ It returns a L<Future> object that should be taken care of by the caller.
 sub method_call {
     my ($self, $method, %args) = @_;
 
-    $args{sentAt}                        = delete($args{sent_at}) || Date::Utility->new->datetime_iso8601 unless $args{sentAt};
+    $args{sentAt} = delete($args{sent_at}) || Date::Utility->new->datetime_iso8601 unless $args{sentAt};
     $args{context}->{library}->{name}    = ref $self;
     $args{context}->{library}->{version} = $VERSION;
 

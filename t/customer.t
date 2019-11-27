@@ -4,7 +4,7 @@ use warnings;
 use Test::More;
 use Test::MockModule;
 use Test::MockObject;
-use Test::Exception;
+use Test::Fatal;
 use IO::Async::Loop;
 use JSON::MaybeUTF8 qw(decode_json_utf8);
 
@@ -49,8 +49,9 @@ my $customer_info = {
     ivalid_xyz   => 'Invalid value'
 };
 
-throws_ok { WebService::Async::Segment::Customer->new() } qr/Missing required arg api_client/, 'Cannot create an onject without a segment api client';
-throws_ok { WebService::Async::Segment::Customer->new(api_client => 'invalid value') } qr/Invalid api_client value/,
+like exception { WebService::Async::Segment::Customer->new() }, qr/Missing required arg api_client/,
+    'Cannot create an onject without a segment api client';
+like exception { WebService::Async::Segment::Customer->new(api_client => 'invalid value') }, qr/Invalid api_client value/,
     'Cannot create an onject with invalid api_client value';
 my $customer = WebService::Async::Segment::Customer->new(api_client => $segment);
 ok $customer, 'Created an object with setting the required argument';
