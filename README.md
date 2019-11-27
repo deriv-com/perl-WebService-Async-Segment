@@ -32,21 +32,22 @@ $customer->track(event => 'buy', properties => {...} )->get;
 ```
 
 
-- Segment HTTP API accepts fields in camelCase only (e.g. `userId` and ``); the wrapper accepts these fields both in camelCase and snake_case (e.g. `user_id` and 'sent_at`). 
+- Segment HTTP API accepts fields in camelCase only (e.g. `userId` and `sentAt`); 
+the wrapper accepts these fields both in camelCase and snake_case (e.g. `user_id` and `sent_at`). 
 Automatic conversion of snake_case to camelCase is applied on standard API fields only; custom fields are kept untouched.
 Exmaple this code block:
 
 ```
 $segment->new_customer(
-    user_id => 'some_id',
-    anonymous_id => '1234,
+    user_id => 'some_id',                     #standard field, will be converted to userId
+    anonymous_id => '1234,                    #standard field, will be converted to anonymousId
     traits => {
-        email => 'xxx@example.com',
-        my_company_attr => 'custom field'
+        first_name => 'Matt',                 #standard field, will be converted to firstName
+        my_company_attr => 'custom field'     #non-standard filed, will be sent without change
     }
 );
 
-$segment->identify(context => {user_agent => 'Mozilla'})->get;
+$segment->identify(context => {user_agent => 'Mozilla'})->get; #standard field, will be converted to userAgent
 
 ```
 is equivalent to:
@@ -56,7 +57,7 @@ $segment->new_customer(
     userId => 'some_id',
     anonymousId => '1234,
     traits => {
-        email => 'xxx@example.com',
+        first_name => 'Matt',
         my_company_attr => 'custom field'
     }
 );
@@ -70,7 +71,7 @@ are asynchronous, returning a [Future](https://metacpan.org/pod/Future) object i
 It requires their ownership to be taken by the caller properly; For example:
 
 ```
-#it is harmful to write:
+#it is potentially harmful to write:
 # $segment->identify();
 # return;
 
