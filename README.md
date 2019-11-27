@@ -37,7 +37,7 @@ $customer->track(event => 'buy', properties => {...} )->get;
 - Segment HTTP API accepts fields in camelCase only (e.g. `userId` and `sentAt`); 
 the wrapper accepts these fields both in camelCase and snake_case (e.g. `user_id` and `sent_at`). 
 Automatic conversion from snake_case to camelCase is performed on standard API fields only; custom fields are kept untouched.
-Exmaple this code block:
+For exmaple this code block:
 
 ```
 $segment->new_customer(
