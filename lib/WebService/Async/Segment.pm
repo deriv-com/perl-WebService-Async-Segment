@@ -146,8 +146,7 @@ It takes the following named parameters:
 
 =item * C<method> - required. Segment method name (such as B<identify> and B<track>).
 
-=item * C<args> - optional. Method arguments represented as a hash. It may include either common, method-specific or custom fields.
-It should include either a B<user_id> or B<customer_id> anyway.
+=item * C<args> - optional. Method arguments represented as a dictionary. This may include either common, method-specific or custom fields.
 
 =back
 
@@ -160,7 +159,7 @@ It returns a L<Future> object that should be taken care of by the caller.
 sub method_call {
     my ($self, $method, %args) = @_;
 
-    $args{sent_at} = delete($args{sent_at}) || Date::Utility->new->datetime_iso8601;
+    $args{sentAt}                        = delete($args{sent_at}) || Date::Utility->new->datetime_iso8601 unless $args{sentAt};
     $args{context}->{library}->{name}    = ref $self;
     $args{context}->{library}->{version} = $VERSION;
 
