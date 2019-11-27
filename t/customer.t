@@ -289,9 +289,9 @@ sub test_call {
         },
         'Context library is correct';
 
-    my $sent_time = Date::Utility->new($json_req->{sentAt});
-    ok $sent_time->is_after(Date::Utility->new(time - 2)), 'SentAt is not too early';
-    ok $sent_time->is_before(Date::Utility->new(time + 1)), 'SentAt is not too late';
+    my $sent_time = Time::Moment->from_string($json_req->{sentAt});
+    ok $sent_time->is_after(Time::Moment->from_epoch(time - 2)), 'SentAt is not too early';
+    ok $sent_time->is_before(Time::Moment->from_epoch(time + 1)), 'SentAt is not too late';
 
     for (keys %$context) {
         ref($context->{$_})

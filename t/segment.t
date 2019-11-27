@@ -4,7 +4,7 @@ use warnings;
 use Test::More;
 use Test::MockModule;
 use Test::MockObject;
-use Date::Utility;
+use Time::Moment;
 
 use WebService::Async::Segment;
 use JSON::MaybeUTF8 qw(decode_json_utf8);
@@ -84,10 +84,11 @@ subtest 'args validation' => sub {
         'Context library is valid';
     is $json_req->{userId}, 'Test User2', 'Json args are correct';
     ok $json_req->{sentAt}, 'SentAt is set by API wrapper';
-    my $sent_time = Date::Utility->new($json_req->{sentAt});
+    warn $json_req->{sentAt};
+    my $sent_time = Time::Moment->from_string($json_req->{sentAt});
 
-    ok $sent_time->is_after(Date::Utility->new($epoch - 1)), 'SentAt is not too early';
-    ok $sent_time->is_before(Date::Utility->new($epoch + 1)), 'SentAt is not too late';
+    ok $sent_time->is_after(Time::Moment->from_epoch($epoch - 1)), 'SentAt is not too early';
+    ok $sent_time->is_before(Time::Moment->from_epoch($epoch + 1)), 'SentAt is not too late';
 
     is_deeply \%call_http_args,
         {
@@ -105,7 +106,7 @@ subtest 'snake_case to camelCase' => sub {
     my %args = (
         user_id      => 'user1',
         anonymous_id => 'anonymous2',
-        sent_at      => Date::Utility->new($epoch)->datetime_iso8601,
+        sent_at      => Time::Moment->now_utc->to_string(),
         custom_field => 'custom3'
     );
     my %context = (
