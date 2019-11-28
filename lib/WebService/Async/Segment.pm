@@ -158,7 +158,7 @@ It takes the following named parameters:
 
 =back
 
-Please refer to L<https://segment.com/docs/spec/common/> for a full list of common fieds supported by Segment.
+Please refer to L<https://segment.com/docs/spec/common/> for a full list of common fields supported by Segment.
 
 It returns a L<Future> object.
 
@@ -167,7 +167,7 @@ It returns a L<Future> object.
 sub method_call {
     my ($self, $method, %args) = @_;
 
-    $args{sent_at} = delete($args{sent_at}) // Time::Moment->now_utc->to_string();
+    $args{sent_at} ||= Time::Moment->now_utc->to_string();
     $args{context}->{library}->{name}    = ref $self;
     $args{context}->{library}->{version} = $VERSION;
 
