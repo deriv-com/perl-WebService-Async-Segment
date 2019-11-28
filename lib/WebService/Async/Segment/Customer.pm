@@ -13,7 +13,7 @@ WebService::Async::Segment::Customer - represents a customer object with methods
 
 =head1 DESCRIPTION
 
-You can create objects directly or (preferably) indirectly using C<< WebService::Async::Segment::new_customer >>.
+You can create objects directly or (preferably) indirectly using L<WebService::Async::Segment/new_customer>.
 Segment calls B<identify> and B<track> can be triggered on objects of this class.
 
 =cut
