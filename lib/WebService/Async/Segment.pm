@@ -155,7 +155,7 @@ It takes the following named parameters:
 
 =back
 
-Please refer to L<https://segment.com/docs/spec/common/> for a full list of common fieds supported by Segment.
+Please refer to L<https://segment.com/docs/spec/common/> for a full list of common fields supported by Segment.
 
 It returns a L<Future> object that should be taken care of by the caller.
 
