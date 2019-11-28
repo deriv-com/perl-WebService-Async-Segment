@@ -164,7 +164,7 @@ It returns a L<Future> object that should be taken care of by the caller.
 sub method_call {
     my ($self, $method, %args) = @_;
 
-    $args{sent_at} = delete($args{sent_at}) // Time::Moment->now_utc->to_string();
+    $args{sent_at} ||= Time::Moment->now_utc->to_string();
     $args{context}->{library}->{name}    = ref $self;
     $args{context}->{library}->{version} = $VERSION;
 
