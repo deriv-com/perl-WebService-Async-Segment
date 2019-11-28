@@ -14,7 +14,7 @@ WebService::Async::Segment::Customer - represents a customer object with methods
 =head1 DESCRIPTION
 
 You can create objects directly or (preferably) indirectly using C<< WebService::Async::Segment::new_customer >>.
-Segment calls B<identify> and B<track> can be triggered on objects of this class.
+Segment calls L</identify> and L</track> can be triggered on objects of this class.
 
 =cut
 
@@ -122,7 +122,7 @@ Note that the API wrapper automatically sets context B<sentAt> and B<library> fi
 
 About common fields please refer to: L<https://segment.com/docs/spec/common/>.
 
-It returns a L<Future> object which should be taken care of by the caller.
+It returns a L<Future> object.
 
 =cut
 
@@ -144,7 +144,7 @@ sub identify {
             $self->{traits} = {%{$args{traits}}} if $args{traits};
 
             return Future->done(@_);
-        });
+        })->retain;
 }
 
 =head2 track
@@ -173,7 +173,7 @@ Note that the API wrapper automatically sets context B<sentAt> and B<library> fi
 
 About common API call params: L<https://segment.com/docs/spec/common/>.
 
-It returns a L<Future> object which should be taken care of by the caller.
+It returns a L<Future> object.
 
 =cut
 

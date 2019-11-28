@@ -160,7 +160,7 @@ It takes the following named parameters:
 
 Please refer to L<https://segment.com/docs/spec/common/> for a full list of common fieds supported by Segment.
 
-It returns a L<Future> object that should be taken care of by the caller.
+It returns a L<Future> object.
 
 =cut
 
@@ -192,9 +192,16 @@ sub method_call {
             $log->tracef('Segment response for %s method received: %s', $method, $result);
 
             my $response_str = $result->content;
-            return Future->fail('RequestFailed', 'segment', $response_str) unless $response_str =~ /^{.*}$/;
+            return Future->fail('RequestFailed', 'segment', $response_str) unless $response_str =~ /{\X+}/;
 
-            my $response = decode_json_utf8($response_str);
+            my $response;
+            try {
+                $response = decode_json_utf8($response_str);
+            }
+            catch {
+                return Future->fail('InvalidResponse', 'segment', $response_str);
+            }
+
             if ($response->{success}) {
                 $log->tracef('Segment %s method call finished successfully.', $method);
 
@@ -205,7 +212,7 @@ sub method_call {
         )->on_fail(
         sub {
             $log->errorf('Segment method %s call failed: %s', $method, \@_);
-        });
+        })->retain;
 }
 
 =head2 new_customer
@@ -215,9 +222,9 @@ It may takes the following named standard arguments to populate the customer onj
 
 =over 4
 
-=item * C<userId> - Unique identifier of a user.
+=item * C<user_id> or  C<userId> - Unique identifier of a user.
 
-=item * C<anonymousId> - A pseudo-unique substitute for a User ID, for cases when you don't have an absolutely unique identifier.
+=item * C<anonymous_id> or C<anonymousId>- A pseudo-unique substitute for a User ID, for cases when you don't have an absolutely unique identifier.
 
 =item * C<traits> - Free-form dictionary of traits of the user, like email or name.
 
@@ -237,7 +244,7 @@ sub new_customer {
 
 =head2 _snake_case_to_camelCase
 
-Creates a deep copy of API call args, replacing the standard snake_case keys with camelCase keys, necessary to keep consistent with Segment HTTP API.
+Creates a deep copy of API call args, replacing the standard snake_case keys with equivalent camelCases, necessary to keep consistent with Segment HTTP API.
 It doesn't automatically alter any non-standard custom keys even they are snake_case.
 
 =over 4
@@ -256,7 +263,7 @@ sub _snake_case_to_camelCase {
     my ($args, $snake_fields) = @_;
 
     return $args unless ref($args) eq 'HASH';
-    $snake_fields = {} unless ref($args) eq 'HASH';
+    $snake_fields = {} unless ref($snake_fields) eq 'HASH';
 
     my $result;
     for my $key (keys %$args) {

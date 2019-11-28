@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 use Test::MockModule;
 use Test::MockObject;
+use Test::Warnings;
 use Time::Moment;
 
 use WebService::Async::Segment;
@@ -16,7 +17,7 @@ my $call_uri;
 my $call_req;
 my %call_http_args;
 my $mock_http     = Test::MockModule->new('Net::Async::HTTP');
-my $mock_response = '{"success":1}';
+my $mock_response = '{\n "success":1 \n }';
 $mock_http->mock(
     'POST' => sub {
         (undef, $call_uri, $call_req, %call_http_args) = @_;
@@ -42,28 +43,35 @@ subtest 'call validation' => sub {
     my $result = $segment->method_call()->block_until_ready;
     ok $result->is_failed(), 'Expected failure with no method';
     my @failure = $result->failure;
-    is_deeply ['ValidationError', 'segment', 'Method name is missing'], [@failure[0 .. 2]], "Correct error message for call without ID";
+    is_deeply [@failure[0 .. 2]], ['ValidationError', 'segment', 'Method name is missing'], "Correct error message for call without ID";
 
     $result = $segment->method_call('invalid_call', user_id => 'Test User')->block_until_ready;
     ok $result->is_failed(), 'Invalid request will fail';
     @failure = $result->failure;
-    is_deeply ['RequestFailed', 'segment', '404 Not Found'], [@failure[0 .. 2]], 'Expected error detail for invalid uri';
+    is_deeply [@failure[0 .. 2]], ['RequestFailed', 'segment', '404 Not Found'], 'Expected error detail for invalid uri';
 
     $result = $segment->method_call('identify')->block_until_ready;
     ok $result->is_failed(), 'Expected failure without id';
     @failure = $result->failure;
-    is_deeply ['ValidationError', 'segment', 'Both user_id and anonymous_id are missing'], [@failure[0 .. 2]],
+    is_deeply [@failure[0 .. 2]], ['ValidationError', 'segment', 'Both user_id and anonymous_id are missing'],
         "Correct error message for call without ID";
 
     $result = $segment->method_call('identify', user_id => 'Test User');
     ok $result, 'Result is OK with user_id';
 
+    $mock_response = '{"success" == 1}';
+    $result = $segment->method_call('identify', user_id => 'Test User')->block_until_ready;
+    ok $result->is_failed(), 'Expected failure for invalid json response';
+    @failure = $result->failure;
+    is_deeply [@failure[0 .. 2]], ['InvalidResponse', 'segment', '{"success" == 1}'], "Correct error details for josn parse error";
+
     $mock_response = Future->fail('Dummy Failure', 'http POST', 'Just for test');
     $result = $segment->method_call('identify', user_id => 'Test User')->block_until_ready;
     ok $result->is_failed(), 'Expected failure when POST fails';
     @failure = $result->failure;
-    is_deeply ['Dummy Failure', 'http POST', 'Just for test'], [@failure[0 .. 2]], "Correct error details for POST failure";
-    $mock_response = '{"success":1}';
+    is_deeply [@failure[0 .. 2]], ['Dummy Failure', 'http POST', 'Just for test'], "Correct error details for POST failure";
+
+    $mock_response = '{\n "success":1 \n }';
 
     $result = $segment->method_call('identify', anonymous_id => 'Test anonymous_id');
     ok $result, 'Result is OK with anonymous_id';
@@ -84,7 +92,6 @@ subtest 'args validation' => sub {
         'Context library is valid';
     is $json_req->{userId}, 'Test User2', 'Json args are correct';
     ok $json_req->{sentAt}, 'SentAt is set by API wrapper';
-    warn $json_req->{sentAt};
     my $sent_time = Time::Moment->from_string($json_req->{sentAt});
 
     ok $sent_time->is_after(Time::Moment->from_epoch($epoch - 1)), 'SentAt is not too early';
@@ -178,7 +185,8 @@ subtest 'snake_case to camelCase' => sub {
         is $json_req->{traits}->{$camel}, $traits{$snake}, "snake_case trait $snake is converted to camelCase $camel";
     }
     is $json_req->{traits}->{address}->{postal_code}, undef, "snake_case trait address->postal_code is removed";
-    is $json_req->{traits}->{address}->{postalCode}, $traits{address}->{postal_code}, "snake_case trait address->postal_code is converted to camelCase address->postalCode";
+    is $json_req->{traits}->{address}->{postalCode}, $traits{address}->{postal_code},
+        "snake_case trait address->postal_code is converted to camelCase address->postalCode";
     is $json_req->{traits}->{custom_trait}, $traits{custom_trait}, "Custom trait is kept in snake_case";
     is $json_req->{traits}->{customTrait}, undef, 'Custom trait is not converted to camelCase';
 };

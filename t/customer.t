@@ -4,6 +4,7 @@ use warnings;
 use Test::More;
 use Test::MockModule;
 use Test::MockObject;
+use Test::Warnings;
 use Test::Fatal;
 use IO::Async::Loop;
 use JSON::MaybeUTF8 qw(decode_json_utf8);
