@@ -188,7 +188,7 @@ sub method_call {
         )->then(
         sub {
             my $result = shift;
-print $result->code . "\n";
+
             $log->tracef('Segment response for %s method received: %s', $method, $result);
 
             my $response_str = $result->content;
