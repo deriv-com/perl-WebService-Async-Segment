@@ -188,25 +188,17 @@ sub method_call {
         )->then(
         sub {
             my $result = shift;
-
+print $result->code . "\n";
             $log->tracef('Segment response for %s method received: %s', $method, $result);
 
             my $response_str = $result->content;
-            return Future->fail('RequestFailed', 'segment', $response_str) unless $response_str =~ /{\X+}/;
 
-            my $response;
-            try {
-                $response = decode_json_utf8($response_str);
-            }
-            catch {
-                return Future->fail('InvalidResponse', 'segment', $response_str);
-            }
-
-            if ($response->{success}) {
+            if ($result->code == 200) {
                 $log->tracef('Segment %s method call finished successfully.', $method);
 
-                return Future->done($response->{success});
+                return Future->done(1);
             }
+
             return Future->fail('RequestFailed', 'segment', $response_str);
         }
         )->on_fail(
