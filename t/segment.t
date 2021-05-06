@@ -18,6 +18,8 @@ my $call_req;
 my %call_http_args;
 my $mock_http     = Test::MockModule->new('Net::Async::HTTP');
 my $mock_response = '{\n "success":1 \n }';
+my $code;
+
 $mock_http->mock(
     'POST' => sub {
         (undef, $call_uri, $call_req, %call_http_args) = @_;
@@ -25,10 +27,16 @@ $mock_http->mock(
         return $mock_response if $mock_response->isa('Future');
 
         my $response = $mock_response;
-        $response = '404 Not Found' unless $call_uri =~ /(identify|track)$/;
+        $code = 200;
+
+        unless ($call_uri =~ /(identify|track)$/) {
+            $response = '404 Not Found';
+            $code = 404;
+        }
 
         my $res = Test::MockObject->new();
         $res->mock(content => sub { $response });
+        $res->mock(code => sub { $code });
         Future->done($res);
     });
 
@@ -58,12 +66,6 @@ subtest 'call validation' => sub {
 
     $result = $segment->method_call('identify', user_id => 'Test User');
     ok $result, 'Result is OK with user_id';
-
-    $mock_response = '{"success" == 1}';
-    $result = $segment->method_call('identify', user_id => 'Test User')->block_until_ready;
-    ok $result->is_failed(), 'Expected failure for invalid json response';
-    @failure = $result->failure;
-    is_deeply [@failure[0 .. 2]], ['InvalidResponse', 'segment', '{"success" == 1}'], "Correct error details for josn parse error";
 
     $mock_response = Future->fail('Dummy Failure', 'http POST', 'Just for test');
     $result = $segment->method_call('identify', user_id => 'Test User')->block_until_ready;

@@ -19,6 +19,8 @@ my $call_req;
 my %call_http_args;
 my $mock_http     = Test::MockModule->new('Net::Async::HTTP');
 my $mock_response = '{"success":1}';
+my $code;
+
 $mock_http->mock(
     'POST' => sub {
         (undef, $call_uri, $call_req, %call_http_args) = @_;
@@ -26,10 +28,16 @@ $mock_http->mock(
         return $mock_response if $mock_response->isa('Future');
 
         my $response = $mock_response;
-        $response = '404 Not Found' unless $call_uri =~ /(identify|track)$/;
+        $code = 200;
+
+        unless ($call_uri =~ /(identify|track)$/) {
+            $response = '404 Not Found';
+            $code = 404;
+        }
 
         my $res = Test::MockObject->new();
         $res->mock(content => sub { $response });
+        $res->mock(code => sub { $code });
         Future->done($res);
     });
 
