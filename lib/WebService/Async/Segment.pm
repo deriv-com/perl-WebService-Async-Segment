@@ -203,7 +203,7 @@ sub method_call {
         }
         )->on_fail(
         sub {
-            $log->errorf('Segment method %s call failed: %s', $method, \@_);
+            $log->errorf('Segment method %s call failed: %s', $method, $_[0]);
         })->retain;
 }
 
