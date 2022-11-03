@@ -120,7 +120,7 @@ sub ua {
         pipeline                 => 0,
         stall_timeout            => TIMEOUT,
         max_connections_per_host => 2,
-        user_agent               => 'Mozilla/4.0 (WebService::Async::Segment; BINARY@cpan.org; https://metacpan.org/pod/WebService::Async::Segment)',
+        user_agent               => 'Mozilla/4.0 (WebService::Async::Segment; DERIV@cpan.org; https://metacpan.org/pod/WebService::Async::Segment)',
     );
 
     $self->add_child($self->{ua});
@@ -277,8 +277,8 @@ __END__
 
 =head1 AUTHOR
 
-binary.com C<< BINARY@cpan.org >>
+deriv.com C<< DERIV@cpan.org >>
 
 =head1 LICENSE
 
-Copyright binary.com 2019. Licensed under the same terms as Perl itself.
+Copyright deriv.com 2019. Licensed under the same terms as Perl itself.

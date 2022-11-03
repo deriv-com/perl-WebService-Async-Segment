@@ -211,8 +211,8 @@ __END__
 
 =head1 AUTHOR
 
-binary.com C<< BINARY@cpan.org >>
+deriv.com C<< DERIV@cpan.org >>
 
 =head1 LICENSE
 
-Copyright binary.com 2019. Licensed under the same terms as Perl itself.
+Copyright deriv.com 2019. Licensed under the same terms as Perl itself.
