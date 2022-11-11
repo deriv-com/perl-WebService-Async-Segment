@@ -26,6 +26,7 @@ on test => sub {
     requires 'Test::MockObject', 0,
     requires 'Test::MockModule', 0;
     requires 'Test::NoWarnings', 0;
+    requries 'Test::Warnings', 0;
     requires 'Path::Tiny', 0;
     requires 'URI', 0;
     requires 'Test::Fatal', 0;
